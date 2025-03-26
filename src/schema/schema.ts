@@ -1,67 +1,71 @@
-import { GraphQLObjectType, GraphQLSchema, GraphQLString, GraphQLNonNull, GraphQLList } from 'graphql';
+import { 
+  GraphQLSchema, 
+  GraphQLObjectType, 
+  GraphQLString, 
+  GraphQLNonNull, 
+  GraphQLList,
+  GraphQLInputObjectType
+} from 'graphql';
 import { register, login } from '../resolvers/auth.resolver';
-import { getPastRaces, getUpcomingRaces, getNextRace } from '../resolvers/race';
-import { RaceType, RaceResultType } from './types/race';
+import { RaceType, PastRaceType, UpcomingRaceType } from './types/race';
+import { F1Resolver } from '../resolvers/f1.resolver';
+
+const f1Resolver = new F1Resolver();
+
+// Types d'entrée pour l'authentification
+const RegisterInputType = new GraphQLInputObjectType({
+  name: 'RegisterInput',
+  fields: () => ({
+    username: { type: new GraphQLNonNull(GraphQLString) },
+    email: { type: new GraphQLNonNull(GraphQLString) },
+    password: { type: new GraphQLNonNull(GraphQLString) }
+  })
+});
+
+const LoginInputType = new GraphQLInputObjectType({
+  name: 'LoginInput',
+  fields: () => ({
+    email: { type: new GraphQLNonNull(GraphQLString) },
+    password: { type: new GraphQLNonNull(GraphQLString) }
+  })
+});
 
 const RootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
-  fields: {
-    hello: {
-      type: GraphQLString,
-      resolve() {
-        return 'Hello from GraphQL';
-      }
-    },
+  fields: () => ({
     getPastRaces: {
-      type: new GraphQLList(RaceResultType),
-      resolve: getPastRaces
+      type: new GraphQLList(PastRaceType),
+      resolve: f1Resolver.getPastRaces
     },
     getUpcomingRaces: {
-      type: new GraphQLList(RaceType),
-      resolve: getUpcomingRaces
+      type: new GraphQLList(UpcomingRaceType),
+      resolve: f1Resolver.getUpcomingRaces
     },
     getNextRace: {
       type: RaceType,
-      resolve: getNextRace
+      resolve: f1Resolver.getNextRace
     }
-  }
+  })
 });
 
 const RootMutation = new GraphQLObjectType({
-  name: 'RootMutationType',
-  fields: {
+  name: 'RootMutation',
+  fields: () => ({
     register: {
       type: GraphQLString,
       args: {
-        input: {
-          type: new GraphQLNonNull(new GraphQLObjectType({
-            name: 'RegisterInput',
-            fields: {
-              username: { type: new GraphQLNonNull(GraphQLString) },
-              email: { type: new GraphQLNonNull(GraphQLString) },
-              password: { type: new GraphQLNonNull(GraphQLString) }
-            }
-          }))
-        }
+        input: { type: new GraphQLNonNull(RegisterInputType) }
       },
       resolve: register
     },
     login: {
       type: GraphQLString,
       args: {
-        input: {
-          type: new GraphQLNonNull(new GraphQLObjectType({
-            name: 'LoginInput',
-            fields: {
-              email: { type: new GraphQLNonNull(GraphQLString) },
-              password: { type: new GraphQLNonNull(GraphQLString) }
-            }
-          }))
-        }
+        input: { type: new GraphQLNonNull(LoginInputType) }
       },
       resolve: login
     }
-  }
+  })
 });
 
 export default new GraphQLSchema({

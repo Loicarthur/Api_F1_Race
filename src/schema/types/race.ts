@@ -1,60 +1,86 @@
-import { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLList, GraphQLInt } from 'graphql';
+import { 
+  GraphQLObjectType, 
+  GraphQLString, 
+  GraphQLInt, 
+  GraphQLList, 
+  GraphQLNonNull 
+} from 'graphql';
 
-const CompetitionType = new GraphQLObjectType({
-  name: 'Competition',
-  fields: {
-    name: { type: GraphQLString },
-    country: { type: GraphQLString }
-  }
-});
-
-const CircuitType = new GraphQLObjectType({
-  name: 'Circuit',
-  fields: {
-    name: { type: GraphQLString },
-    image: { type: GraphQLString }
-  }
-});
-
+// Type pour l'équipe
 const TeamType = new GraphQLObjectType({
   name: 'Team',
-  fields: {
+  fields: () => ({
     name: { type: GraphQLString },
     color: { type: GraphQLString }
-  }
+  })
 });
 
+// Type pour le circuit
+const CircuitType = new GraphQLObjectType({
+  name: 'Circuit',
+  fields: () => ({
+    name: { type: new GraphQLNonNull(GraphQLString) },
+    image: { type: new GraphQLNonNull(GraphQLString) }
+  })
+});
+
+// Type pour la compétition
+const CompetitionType = new GraphQLObjectType({
+  name: 'Competition',
+  fields: () => ({
+    name: { type: new GraphQLNonNull(GraphQLString) },
+    country: { type: new GraphQLNonNull(GraphQLString) }
+  })
+});
+
+// Type pour les résultats des pilotes
 const DriverResultType = new GraphQLObjectType({
   name: 'DriverResult',
-  fields: {
-    driver_name: { type: GraphQLString },
-    driver_trigram: { type: GraphQLString },
-    driver_team: { type: TeamType },
+  fields: () => ({
+    driver_name: { type: new GraphQLNonNull(GraphQLString) },
+    driver_trigram: { type: new GraphQLNonNull(GraphQLString) },
+    driver_team: { type: new GraphQLNonNull(TeamType) },
     timer: { type: GraphQLString },
-    position: { type: GraphQLString },
-    points: { type: GraphQLInt }
-  }
+    position: { type: new GraphQLNonNull(GraphQLString) },
+    points: { type: new GraphQLNonNull(GraphQLInt) }
+  })
 });
 
-const RaceResultType = new GraphQLObjectType({
-  name: 'RaceResult',
-  fields: {
-    id: { type: GraphQLID },
-    competition: { type: CompetitionType },
-    circuit: { type: CircuitType },
-    date: { type: GraphQLString },
-    result: { type: new GraphQLList(DriverResultType) }
-  }
+// Type pour le P10
+const P10Type = new GraphQLObjectType({
+  name: 'P10',
+  fields: () => ({
+    name: { type: new GraphQLNonNull(GraphQLString) },
+    trigram: { type: new GraphQLNonNull(GraphQLString) },
+    team: { type: new GraphQLNonNull(TeamType) }
+  })
 });
 
-const RaceType = new GraphQLObjectType({
+// Type principal pour une course
+export const RaceType = new GraphQLObjectType({
   name: 'Race',
-  fields: {
-    id: { type: GraphQLID },
-    competition: { type: CompetitionType },
-    circuit: { type: CircuitType },
-    date: { type: GraphQLString }
-  }
+  fields: () => ({
+    id: { type: new GraphQLNonNull(GraphQLInt) },
+    competition: { type: new GraphQLNonNull(CompetitionType) },
+    circuit: { type: new GraphQLNonNull(CircuitType) },
+    date: { type: new GraphQLNonNull(GraphQLString) },
+    result: { type: new GraphQLList(DriverResultType) },
+    p10: { type: P10Type }
+  })
 });
 
-export { RaceType, RaceResultType };
+// Type pour le résultat d'une course passée (inclut les résultats)
+export const PastRaceType = new GraphQLObjectType({
+  name: 'PastRace',
+  fields: () => ({
+    race: { type: new GraphQLNonNull(RaceType) }
+  })
+});
+
+// Type pour une course à venir (sans résultats)
+export const UpcomingRaceType = new GraphQLObjectType({
+  name: 'UpcomingRace',
+  fields: () => ({
+    race: { type: new GraphQLNonNull(RaceType) }
+  })
+});
