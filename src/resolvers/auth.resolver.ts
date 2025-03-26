@@ -1,7 +1,8 @@
 import { GraphQLFieldResolver } from 'graphql';
-import User from '../models/User';
-import bcrypt from 'bcryptjs';
+import { UserModel } from '../models/User';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import { MyContext } from '../types/MyContext';
 
 // Types pour l'authentification
 interface RegisterInput {
@@ -33,56 +34,75 @@ const handleError = (error: unknown): never => {
 };
 
 // Resolver pour l'inscription
-export const register: GraphQLFieldResolver<any, any> = async (_, args) => {
+export const register: GraphQLFieldResolver<any, MyContext> = async (_, { input }) => {
   try {
-    const input = args.input as RegisterInput;
-    const { username, email, password } = input;
+    const { username, email, password } = input as RegisterInput;
 
-    // Vérification si l'utilisateur existe déjà
-    const existingUser = await User.findOne({ email });
+    // Vérifier si l'utilisateur existe déjà
+    const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
-      throw new Error('Un utilisateur avec cet email existe déjà');
+      throw new Error('User already exists');
     }
 
     // Hashage du mot de passe
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Création du nouvel utilisateur
-    const user = new User({
+    // Créer un nouvel utilisateur
+    const user = new UserModel({
       username,
       email,
       password: hashedPassword
     });
+
     await user.save();
 
-    // Génération du token JWT
-    return generateToken(user.id);
-  } catch (error: unknown) {
+    // Générer le token JWT
+    const token = generateToken(user.id);
+
+    return {
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
+    };
+  } catch (error) {
     handleError(error);
   }
 };
 
 // Resolver pour la connexion
-export const login: GraphQLFieldResolver<any, any> = async (_, args) => {
+export const login: GraphQLFieldResolver<any, MyContext> = async (_, { input }) => {
   try {
-    const input = args.input as LoginInput;
-    const { email, password } = input;
+    const { email, password } = input as LoginInput;
 
-    // Recherche de l'utilisateur
-    const user = await User.findOne({ email });
+    // Trouver l'utilisateur
+    const user = await UserModel.findOne({ email });
     if (!user) {
-      throw new Error('Email ou mot de passe incorrect');
+      throw new Error('User not found');
     }
 
-    // Vérification du mot de passe
+    // Vérifier le mot de passe
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      throw new Error('Email ou mot de passe incorrect');
+      throw new Error('Invalid password');
     }
 
-    // Génération du token JWT
-    return generateToken(user.id);
-  } catch (error: unknown) {
+    // Générer le token JWT
+    const token = generateToken(user.id);
+
+    return {
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      }
+    };
+  } catch (error) {
     handleError(error);
   }
 };
