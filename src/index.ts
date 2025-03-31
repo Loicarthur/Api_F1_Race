@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import schema from './schema/schema';
 import connectDB from './config/database';
+import { syncService } from './services/sync.service';
 
 // Load environment variables
 dotenv.config();
@@ -16,6 +17,9 @@ app.use(cors());
 // Connect to MongoDB
 connectDB()
   .then(() => {
+    // Initialisation du service de synchronisation
+    syncService.initializeSync();
+
     // GraphQL endpoint
     app.use('/graphql', createHandler({ schema }));
 
@@ -25,7 +29,7 @@ connectDB()
       console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
     });
   })
-  .catch(err => {
+  .catch((err: Error) => {
     console.error('Failed to start server:', err);
     process.exit(1);
   });

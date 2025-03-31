@@ -22,6 +22,28 @@ export class F1Service {
     }
   }
 
+  // Récupérer les pilotes actuels de la saison
+  async getCurrentDrivers() {
+    try {
+      const currentYear = new Date().getFullYear();
+      const response = await axios.get(`${this.baseUrl}/drivers?year=${currentYear}`);
+      
+      // Transforme les données pour correspondre à notre modèle
+      return response.data.map((driver: any) => ({
+        driverId: driver.driver_number.toString(),
+        code: driver.driver_code,
+        firstName: driver.first_name,
+        lastName: driver.last_name,
+        dateOfBirth: driver.date_of_birth,
+        nationality: driver.nationality,
+        team: driver.team_name
+      }));
+    } catch (error) {
+      console.error('Erreur lors de la récupération des pilotes actuels:', error);
+      throw error;
+    }
+  }
+
   // Récupérer les informations de la session
   async getSessions(year?: number, round?: number, session_type?: string) {
     try {
