@@ -22,4 +22,4 @@ const DriverSchema: Schema = new Schema({
   lastUpdated: { type: Date, default: Date.now }
 });
 
-export default mongoose.model<IDriver>('Driver', DriverSchema);
+export default mongoose.model<IDriver>('F1Driver', DriverSchema);

@@ -4,6 +4,8 @@ import { F1Resolver } from '../resolvers/f1.resolver';
 import { F1HistoryResolver } from '../resolvers/f1-history.resolver';
 import { CarDataType, LapTimeType, TrackStatusType } from './types/f1.types';
 import { RaceHistoryType } from './types/race-history';
+import { AuthResponseType } from './types/auth.types';
+import { MyContext } from '../types/MyContext';
 
 const f1Resolver = new F1Resolver();
 const f1HistoryResolver = new F1HistoryResolver();
@@ -112,18 +114,18 @@ const RootQuery = new GraphQLObjectType({
   })
 });
 
-const RootMutation = new GraphQLObjectType({
+const RootMutation = new GraphQLObjectType<unknown, MyContext>({
   name: 'RootMutation',
   fields: () => ({
     register: {
-      type: GraphQLString,
+      type: AuthResponseType,
       args: {
         input: { type: new GraphQLNonNull(RegisterInputType) }
       },
       resolve: register
     },
     login: {
-      type: GraphQLString,
+      type: AuthResponseType,
       args: {
         input: { type: new GraphQLNonNull(LoginInputType) }
       },

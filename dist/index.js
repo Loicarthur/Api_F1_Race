@@ -4,38 +4,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const apollo_server_express_1 = require("apollo-server-express");
-const type_graphql_1 = require("type-graphql");
-const database_1 = require("./config/database");
+const express_2 = require("graphql-http/lib/use/express");
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const auth_resolver_1 = require("./resolvers/auth.resolver");
-const f1_resolver_1 = require("./resolvers/f1.resolver");
+const schema_1 = __importDefault(require("./schema/schema"));
+const database_1 = __importDefault(require("./config/database"));
+const sync_service_1 = require("./services/sync.service");
 dotenv_1.default.config();
-const startServer = async () => {
-    const app = (0, express_1.default)();
-    app.use((0, cors_1.default)());
-    await (0, database_1.connectDB)();
-    const schema = await (0, type_graphql_1.buildSchema)({
-        resolvers: [auth_resolver_1.AuthResolver, f1_resolver_1.F1Resolver],
-        emitSchemaFile: true,
-    });
-    const server = new apollo_server_express_1.ApolloServer({
-        schema,
-        context: ({ req }) => {
-            return {
-                req,
-            };
-        },
-    });
-    await server.start();
-    server.applyMiddleware({ app });
+const app = (0, express_1.default)();
+app.use((0, cors_1.default)());
+(0, database_1.default)()
+    .then(() => {
+    sync_service_1.syncService.initializeSync();
+    app.use('/graphql', (0, express_2.createHandler)({ schema: schema_1.default }));
     const PORT = process.env.PORT || 4000;
     app.listen(PORT, () => {
-        console.log(`🚀 Server ready at http://localhost:${PORT}${server.graphqlPath}`);
+        console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
     });
-};
-startServer().catch((error) => {
-    console.error('Error starting server:', error);
+})
+    .catch((err) => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
 });
 //# sourceMappingURL=index.js.map

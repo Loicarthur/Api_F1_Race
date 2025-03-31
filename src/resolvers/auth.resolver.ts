@@ -34,9 +34,9 @@ const handleError = (error: unknown): never => {
 };
 
 // Resolver pour l'inscription
-export const register: GraphQLFieldResolver<any, MyContext> = async (_, { input }) => {
+export const register: GraphQLFieldResolver<unknown, MyContext> = async (_, args) => {
   try {
-    const { username, email, password } = input as RegisterInput;
+    const { username, email, password } = args.input as RegisterInput;
 
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
@@ -48,13 +48,11 @@ export const register: GraphQLFieldResolver<any, MyContext> = async (_, { input 
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // Créer un nouvel utilisateur
-    const user = new UserModel({
+    const user = await UserModel.create({
       username,
       email,
       password: hashedPassword
     });
-
-    await user.save();
 
     // Générer le token JWT
     const token = generateToken(user.id);
@@ -62,23 +60,22 @@ export const register: GraphQLFieldResolver<any, MyContext> = async (_, { input 
     return {
       token,
       user: {
-        id: user._id,
+        id: user.id,
         username: user.username,
-        email: user.email,
-        role: user.role
+        email: user.email
       }
     };
   } catch (error) {
-    handleError(error);
+    return handleError(error);
   }
 };
 
 // Resolver pour la connexion
-export const login: GraphQLFieldResolver<any, MyContext> = async (_, { input }) => {
+export const login: GraphQLFieldResolver<unknown, MyContext> = async (_, args) => {
   try {
-    const { email, password } = input as LoginInput;
+    const { email, password } = args.input as LoginInput;
 
-    // Trouver l'utilisateur
+    // Vérifier si l'utilisateur existe
     const user = await UserModel.findOne({ email });
     if (!user) {
       throw new Error('User not found');
@@ -96,13 +93,12 @@ export const login: GraphQLFieldResolver<any, MyContext> = async (_, { input }) 
     return {
       token,
       user: {
-        id: user._id,
+        id: user.id,
         username: user.username,
-        email: user.email,
-        role: user.role
+        email: user.email
       }
     };
   } catch (error) {
-    handleError(error);
+    return handleError(error);
   }
 };
