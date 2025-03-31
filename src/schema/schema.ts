@@ -1,10 +1,10 @@
 import { GraphQLObjectType, GraphQLSchema, GraphQLString, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLInputObjectType } from 'graphql';
-import { register, login } from '../resolvers/auth.resolver';
+import { register, login, getAllUsers } from '../resolvers/auth.resolver';
 import { F1Resolver } from '../resolvers/f1.resolver';
 import { F1HistoryResolver } from '../resolvers/f1-history.resolver';
 import { CarDataType, LapTimeType, TrackStatusType } from './types/f1.types';
 import { RaceHistoryType } from './types/race-history';
-import { AuthResponseType } from './types/auth.types';
+import { AuthResponseType, UserType } from './types/auth.types';
 import { MyContext } from '../types/MyContext';
 
 const f1Resolver = new F1Resolver();
@@ -31,6 +31,12 @@ const LoginInputType = new GraphQLInputObjectType({
 const RootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: () => ({
+    // Liste des utilisateurs
+    users: {
+      type: new GraphQLList(UserType),
+      resolve: getAllUsers
+    },
+    
     // Données historiques (api-sports.io)
     getPastRaces: {
       type: new GraphQLList(RaceHistoryType),

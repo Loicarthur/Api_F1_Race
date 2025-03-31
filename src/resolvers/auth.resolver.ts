@@ -1,7 +1,6 @@
 import { GraphQLFieldResolver } from 'graphql';
 import { UserModel } from '../models/User';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
 import { MyContext } from '../types/MyContext';
 
 // Types pour l'authentification
@@ -44,14 +43,11 @@ export const register: GraphQLFieldResolver<unknown, MyContext> = async (_, args
       throw new Error('User already exists');
     }
 
-    // Hashage du mot de passe
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Créer un nouvel utilisateur
+    // Créer un nouvel utilisateur (le middleware pre-save va hasher le mot de passe)
     const user = await UserModel.create({
       username,
       email,
-      password: hashedPassword
+      password // Le mot de passe sera hashé automatiquement par le middleware
     });
 
     // Générer le token JWT
@@ -81,8 +77,8 @@ export const login: GraphQLFieldResolver<unknown, MyContext> = async (_, args) =
       throw new Error('User not found');
     }
 
-    // Vérifier le mot de passe
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    // Vérifier le mot de passe en utilisant la méthode du modèle
+    const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
       throw new Error('Invalid password');
     }
@@ -98,6 +94,20 @@ export const login: GraphQLFieldResolver<unknown, MyContext> = async (_, args) =
         email: user.email
       }
     };
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+// Resolver pour obtenir tous les utilisateurs
+export const getAllUsers: GraphQLFieldResolver<unknown, MyContext> = async () => {
+  try {
+    const users = await UserModel.find({}, '-password'); // Exclure le mot de passe
+    return users.map(user => ({
+      id: user.id,
+      username: user.username,
+      email: user.email
+    }));
   } catch (error) {
     return handleError(error);
   }
