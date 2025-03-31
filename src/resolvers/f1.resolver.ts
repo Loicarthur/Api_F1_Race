@@ -1,5 +1,6 @@
 import { GraphQLFieldResolver } from 'graphql';
 import { F1Service } from '../services/f1.service';
+import Driver from '../models/Driver';
 
 export class F1Resolver {
   private f1Service: F1Service;
@@ -86,9 +87,10 @@ export class F1Resolver {
   };
 
   // Récupérer les informations des pilotes
-  getDrivers: GraphQLFieldResolver<any, any> = async (_, { session_key }) => {
+  getDrivers: GraphQLFieldResolver<any, any> = async () => {
     try {
-      const drivers = await this.f1Service.getDrivers(session_key);
+      // Utilise la base de données locale au lieu de l'API
+      const drivers = await Driver.find().sort({ lastName: 1 });
       return drivers;
     } catch (error) {
       console.error('Erreur lors de la récupération des pilotes:', error);

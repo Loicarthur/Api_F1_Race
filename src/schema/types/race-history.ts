@@ -11,8 +11,8 @@ const CircuitType = new GraphQLObjectType({
 });
 
 // Type pour le pilote
-const DriverType = new GraphQLObjectType({
-  name: 'Driver',
+const RaceHistoryDriverType = new GraphQLObjectType({
+  name: 'RaceHistoryDriver',
   fields: {
     name: { type: GraphQLString },
     number: { type: GraphQLInt },
@@ -34,7 +34,7 @@ const RaceResultType = new GraphQLObjectType({
   name: 'RaceResult',
   fields: {
     position: { type: GraphQLInt },
-    driver: { type: DriverType },
+    driver: { type: RaceHistoryDriverType },
     team: { type: TeamType },
     time: { type: GraphQLString },
     laps: { type: GraphQLInt },

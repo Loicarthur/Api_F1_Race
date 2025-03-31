@@ -1,7 +1,6 @@
 import { GraphQLFieldResolver } from 'graphql';
 import { UserModel } from '../models/User';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
 import { MyContext } from '../types/MyContext';
 
 // Types pour l'authentification
@@ -34,9 +33,9 @@ const handleError = (error: unknown): never => {
 };
 
 // Resolver pour l'inscription
-export const register: GraphQLFieldResolver<any, MyContext> = async (_, { input }) => {
+export const register: GraphQLFieldResolver<unknown, MyContext> = async (_, args) => {
   try {
-    const { username, email, password } = input as RegisterInput;
+    const { username, email, password } = args.input as RegisterInput;
 
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
@@ -44,17 +43,12 @@ export const register: GraphQLFieldResolver<any, MyContext> = async (_, { input 
       throw new Error('User already exists');
     }
 
-    // Hashage du mot de passe
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // Créer un nouvel utilisateur
-    const user = new UserModel({
+    // Créer un nouvel utilisateur (le middleware pre-save va hasher le mot de passe)
+    const user = await UserModel.create({
       username,
       email,
-      password: hashedPassword
+      password // Le mot de passe sera hashé automatiquement par le middleware
     });
-
-    await user.save();
 
     // Générer le token JWT
     const token = generateToken(user.id);
@@ -62,30 +56,29 @@ export const register: GraphQLFieldResolver<any, MyContext> = async (_, { input 
     return {
       token,
       user: {
-        id: user._id,
+        id: user.id,
         username: user.username,
-        email: user.email,
-        role: user.role
+        email: user.email
       }
     };
   } catch (error) {
-    handleError(error);
+    return handleError(error);
   }
 };
 
 // Resolver pour la connexion
-export const login: GraphQLFieldResolver<any, MyContext> = async (_, { input }) => {
+export const login: GraphQLFieldResolver<unknown, MyContext> = async (_, args) => {
   try {
-    const { email, password } = input as LoginInput;
+    const { email, password } = args.input as LoginInput;
 
-    // Trouver l'utilisateur
+    // Vérifier si l'utilisateur existe
     const user = await UserModel.findOne({ email });
     if (!user) {
       throw new Error('User not found');
     }
 
-    // Vérifier le mot de passe
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    // Vérifier le mot de passe en utilisant la méthode du modèle
+    const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
       throw new Error('Invalid password');
     }
@@ -96,13 +89,26 @@ export const login: GraphQLFieldResolver<any, MyContext> = async (_, { input }) 
     return {
       token,
       user: {
-        id: user._id,
+        id: user.id,
         username: user.username,
-        email: user.email,
-        role: user.role
+        email: user.email
       }
     };
   } catch (error) {
-    handleError(error);
+    return handleError(error);
+  }
+};
+
+// Resolver pour obtenir tous les utilisateurs
+export const getAllUsers: GraphQLFieldResolver<unknown, MyContext> = async () => {
+  try {
+    const users = await UserModel.find({}, '-password'); // Exclure le mot de passe
+    return users.map(user => ({
+      id: user.id,
+      username: user.username,
+      email: user.email
+    }));
+  } catch (error) {
+    return handleError(error);
   }
 };
