@@ -8,31 +8,31 @@ import { syncService } from './services/sync.service';
 
 // Charger les variables d'environnement
 dotenv.config();
-console.log('💫 Démarrage du serveur...');
+console.log(' Démarrage du serveur...');
 
 // Créer l'application Express
 const app = express();
 
 // Activer CORS
 app.use(cors());
-console.log('✅ CORS activé');
+console.log(' CORS activé');
 
 // Connexion à MongoDB
-console.log('🔄 Tentative de connexion à MongoDB...');
+console.log('Tentative de connexion à MongoDB...');
 connectDB()
   .then(() => {
-    console.log('✅ MongoDB connecté avec succès!');
+    console.log('MongoDB connecté avec succès!');
     
     // Initialisation du service de synchronisation
     syncService.initializeSync();
-    console.log('✅ Service de synchronisation initialisé');
+    console.log('Service de synchronisation initialisé');
 
     // Configuration de l'endpoint GraphQL
     app.use('/', graphqlHTTP({
       schema,
       graphiql: true,
     }));
-    console.log('✅ Endpoint GraphQL configuré');
+    console.log('Endpoint GraphQL configuré');
 
     // Démarrer le serveur
     const PORT = process.env.PORT || 4002;
@@ -46,6 +46,6 @@ connectDB()
     });
   })
   .catch((err: Error) => {
-    console.error('❌ Erreur de connexion à MongoDB:', err);
+    console.error('Erreur de connexion à MongoDB:', err);
     process.exit(1);
   });

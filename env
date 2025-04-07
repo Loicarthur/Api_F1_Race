@@ -1,0 +1,15 @@
+# MongoDB
+MONGODB_URI=mongodb+srv://Loic:Loic@f1race.lrvdnc1.mongodb.net/
+
+# JWT
+JWT_SECRET=Loic
+JWT_EXPIRES_IN=24h
+
+# API
+PORT=4000
+# API Sports
+API_SPORTS_KEY=
+# MongoDB Express
+ME_CONFIG_MONGODB_SERVER=mongodb
+ME_CONFIG_BASICAUTH_USERNAME=Loic
+ME_CONFIG_BASICAUTH_PASSWORD=Loic
