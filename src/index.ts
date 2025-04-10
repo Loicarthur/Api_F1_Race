@@ -22,7 +22,7 @@ connectDB()
 
     // Démarrer le serveur
     app.listen(port, () => {
-      console.log(`🚀 Serveur GraphQL démarré sur http://localhost:${port}`);
+      console.log(`Serveur GraphQL démarré sur http://localhost:${port}`);
     });
   })
   .catch(err => {

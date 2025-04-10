@@ -7,6 +7,9 @@ services:
     restart: always
     ports:
       - "4002:4002"
+    environment:
+      - JWT_SECRET=your_jwt_secret=value
+      - PORT=4002
     volumes:
       - ./src:/usr/src/app/src
     depends_on:
