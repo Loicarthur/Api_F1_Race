@@ -1,5 +1,5 @@
 import { GraphQLObjectType, GraphQLString } from 'graphql';
-
+import { ErrorType } from '../types/ErrorType';
 // Type d'utilisateur
 export const UserType = new GraphQLObjectType({
   name: 'User',
@@ -16,16 +16,6 @@ export const AuthResponseType = new GraphQLObjectType({
   fields: () => ({
     token: { type: GraphQLString },
     user: { type: UserType },
-    error: { type: GraphQLString } 
+    error: { type: ErrorType },
   })
-});
-
-// Type d'erreur
-export const ErrorType = new GraphQLObjectType({
-  name: 'Error',
-  fields: {
-    message: { type: GraphQLString },
-    code: { type: GraphQLString },
-    httpStatus: { type: GraphQLString } 
-  }
 });
