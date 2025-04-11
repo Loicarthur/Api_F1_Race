@@ -118,7 +118,7 @@ export const getAllUsers: GraphQLFieldResolver<unknown, MyContext> = async () =>
       id: user.id,
       username: user.username,
       email: user.email
-    }));
+    }));  
   } catch (error) {
     return {
       error: {

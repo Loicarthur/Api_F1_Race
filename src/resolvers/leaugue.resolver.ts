@@ -1,5 +1,5 @@
 import { GraphQLFieldResolver } from 'graphql';
-import { LeagueModel } from '../models/League'; 
+import { LeagueModel } from '../models/League'; // Modèle pour les ligues
 import { MyContext } from '../types/MyContext';
 
 // Fonction utilitaire pour générer un code de participation
@@ -63,19 +63,10 @@ export const createLeague: GraphQLFieldResolver<unknown, MyContext> = async (_, 
 export const getAllLeagues: GraphQLFieldResolver<unknown, MyContext> = async () => {
   try {
     const leagues = await LeagueModel.find({});
-    return {
-      league: leagues,
-      error: null,
-    };
+    return leagues; // Retourner le tableau directement
   } catch (error) {
-    return {
-      league: null,
-      error: {
-        message: error instanceof Error ? error.message : 'Une erreur inattendue est survenue',
-        code: 'INTERNAL_SERVER_ERROR',
-        httpStatus: '500',
-      },
-    };
+    console.error("Erreur lors de la récupération des ligues :", error);
+    throw new Error(error instanceof Error ? error.message : 'Une erreur inattendue est survenue');
   }
 };
 
