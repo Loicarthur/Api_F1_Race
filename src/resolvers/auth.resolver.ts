@@ -3,18 +3,6 @@ import { UserModel } from '../models/User';
 import jwt from 'jsonwebtoken';
 import { MyContext } from '../types/MyContext';
 
-// Types pour l'authentification
-interface RegisterInput {
-  username: string;
-  email: string;
-  password: string;
-}
-
-interface LoginInput {
-  email: string;
-  password: string;
-}
-
 // Configuration JWT
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const JWT_EXPIRES_IN = '24h';
@@ -24,33 +12,25 @@ const generateToken = (userId: string): string => {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 };
 
-// Fonction utilitaire pour gérer les erreurs
-const handleError = (error: unknown): never => {
-  if (error instanceof Error) {
-    throw new Error(error.message);
-  }
-  throw new Error('Une erreur inattendue est survenue');
-};
-
 // Resolver pour l'inscription
 export const register: GraphQLFieldResolver<unknown, MyContext> = async (_, args) => {
   try {
-    const { username, email, password } = args.input as RegisterInput;
+    const { username, email, password } = args.input;
 
-    // Vérifier si l'utilisateur existe déjà
     const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
-      throw new Error('User already exists');
+      return {
+        token: null,
+        user: null,
+        error: {
+          message: 'User already exists',
+          code: 'USER_ALREADY_EXISTS',
+          httpStatus: '400' 
+        }
+      };
     }
 
-    // Créer un nouvel utilisateur (le middleware pre-save va hasher le mot de passe)
-    const user = await UserModel.create({
-      username,
-      email,
-      password // Le mot de passe sera hashé automatiquement par le middleware
-    });
-
-    // Générer le token JWT
+    const user = await UserModel.create({ username, email, password });
     const token = generateToken(user.id);
 
     return {
@@ -59,31 +39,53 @@ export const register: GraphQLFieldResolver<unknown, MyContext> = async (_, args
         id: user.id,
         username: user.username,
         email: user.email
-      }
+      },
+      error: null
     };
   } catch (error) {
-    return handleError(error);
+    return {
+      token: null,
+      user: null,
+      error: {
+        message: error instanceof Error ? error.message : 'Une erreur inattendue est survenue',
+        code: 'INTERNAL_SERVER_ERROR',
+        httpStatus: '500'
+      }
+    };
   }
 };
 
 // Resolver pour la connexion
 export const login: GraphQLFieldResolver<unknown, MyContext> = async (_, args) => {
   try {
-    const { email, password } = args.input as LoginInput;
-
-    // Vérifier si l'utilisateur existe
+    const { email, password } = args.input;
+    
     const user = await UserModel.findOne({ email });
     if (!user) {
-      throw new Error('User not found');
+      return {
+        token: null,
+        user: null,
+        error: {
+          message: 'User not found',
+          code: 'USER_NOT_FOUND',
+          httpStatus: '404'
+        }
+      };
     }
 
-    // Vérifier le mot de passe en utilisant la méthode du modèle
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
-      throw new Error('Invalid password');
+      return {
+        token: null,
+        user: null,
+        error: {
+          message: 'Invalid password',
+          code: 'INVALID_CREDENTIALS',
+          httpStatus: '401'
+        }
+      };
     }
 
-    // Générer le token JWT
     const token = generateToken(user.id);
 
     return {
@@ -92,23 +94,38 @@ export const login: GraphQLFieldResolver<unknown, MyContext> = async (_, args) =
         id: user.id,
         username: user.username,
         email: user.email
-      }
+      },
+      error: null
     };
   } catch (error) {
-    return handleError(error);
+    return {
+      token: null,
+      user: null,
+      error: {
+        message: error instanceof Error ? error.message : 'Une erreur inattendue est survenue',
+        code: 'INTERNAL_SERVER_ERROR',
+        httpStatus: '500'
+      }
+    };
   }
 };
 
 // Resolver pour obtenir tous les utilisateurs
 export const getAllUsers: GraphQLFieldResolver<unknown, MyContext> = async () => {
   try {
-    const users = await UserModel.find({}, '-password'); // Exclure le mot de passe
+    const users = await UserModel.find({}, '-password');
     return users.map(user => ({
       id: user.id,
       username: user.username,
       email: user.email
     }));
   } catch (error) {
-    return handleError(error);
+    return {
+      error: {
+        message: error instanceof Error ? error.message : 'Une erreur inattendue est survenue',
+        code: 'INTERNAL_SERVER_ERROR',
+        httpStatus: '500'
+      }
+    };
   }
 };

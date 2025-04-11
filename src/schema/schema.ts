@@ -6,7 +6,8 @@ import { CarDataType, LapTimeType, TrackStatusType } from './types/f1.types';
 import { RaceHistoryType } from './types/race-history';
 import { AuthResponseType, UserType } from './types/auth.types';
 import { MyContext } from '../types/MyContext';
-
+import { getAllLeagues, leagueResolvers} from '../resolvers/leaugue.resolver';
+import {LeagueResponseType, LeagueType } from './types/league.types'; 
 const f1Resolver = new F1Resolver();
 const f1HistoryResolver = new F1HistoryResolver();
 
@@ -27,6 +28,14 @@ const LoginInputType = new GraphQLInputObjectType({
     password: { type: new GraphQLNonNull(GraphQLString) }
   })
 });
+
+const LeagueInputType = new GraphQLInputObjectType({
+  name: 'LeagueInput',
+  fields: () => ({
+    leagueType: { type: new GraphQLNonNull(GraphQLString) },
+    leagueName: { type: new GraphQLNonNull(GraphQLString) },
+    maxParticipants: { type: new GraphQLNonNull(GraphQLInt) },
+  })});
 
 const RootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
@@ -52,6 +61,9 @@ const RootQuery = new GraphQLObjectType({
       },
       resolve: f1HistoryResolver.getRaceDetails
     },
+    getAllLeagues: {
+      type: new GraphQLList(LeagueType),
+      resolve: getAllLeagues},
 
     // Données en temps réel (OpenF1)
     carData: {
@@ -128,16 +140,23 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
       args: {
         input: { type: new GraphQLNonNull(RegisterInputType) }
       },
-      resolve: register
+      resolve: register,
     },
     login: {
       type: AuthResponseType,
       args: {
         input: { type: new GraphQLNonNull(LoginInputType) }
       },
-      resolve: login
-    }
-  })
+      resolve: login,
+    },
+    createLeague: {
+      type: LeagueResponseType,
+      args: {
+        input: { type: new GraphQLNonNull(LeagueInputType) },
+      },
+      resolve: leagueResolvers.Mutation.createLeague,
+    },
+  }),
 });
 
 export default new GraphQLSchema({
