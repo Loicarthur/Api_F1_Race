@@ -1,22 +1,28 @@
-version: '3.8'
-
 services:
-  f1-backend:
-    build: .
+  # Service API Node.js
+  api:
+    build: 
+      context: ./
+      dockerfile: Dockerfile 
+    restart: always
     ports:
       - "4002:4002"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/f1db
-      - NODE_ENV=production
+      - JWT_SECRET=your_jwt_secret=value
+      - PORT=4002
+    volumes:
+      - ./src:/usr/src/app/src
     depends_on:
-      - mongodb
+      - mongo 
 
-  mongodb:
+  # Service MongoDB
+  mongo:
     image: mongo:latest
+    container_name: mongo
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
+      - mongo-data:/data/db 
 
 volumes:
-  mongodb_data:
+  mongo-data:
