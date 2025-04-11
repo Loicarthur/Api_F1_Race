@@ -13,7 +13,7 @@ const generateToken = (userId: string): string => {
 };
 
 // Resolver pour l'inscription
-export const register: GraphQLFieldResolver<unknown, MyContext> = async (_, args) => {
+export const register: GraphQLFieldResolver<unknown, MyContext> = async (_, args, context) => {
   try {
     const { username, email, password } = args.input;
 
@@ -25,43 +25,50 @@ export const register: GraphQLFieldResolver<unknown, MyContext> = async (_, args
         error: {
           message: 'User already exists',
           code: 'USER_ALREADY_EXISTS',
-          httpStatus: '400' 
-        }
+          httpStatus: 400, 
+        },
+        httpStatus: 400, 
       };
     }
 
     const user = await UserModel.create({ username, email, password });
     const token = generateToken(user.id);
 
+    context.res.status(201); 
     return {
       token,
       user: {
         id: user.id,
         username: user.username,
-        email: user.email
+        email: user.email,
       },
-      error: null
+      error: null,
+      httpStatus: 201, 
     };
   } catch (error) {
+    context.res.status(500); 
     return {
       token: null,
       user: null,
       error: {
         message: error instanceof Error ? error.message : 'Une erreur inattendue est survenue',
         code: 'INTERNAL_SERVER_ERROR',
-        httpStatus: '500'
-      }
+        httpStatus: 500, 
+      },
+      httpStatus: 500, 
     };
   }
 };
 
 // Resolver pour la connexion
-export const login: GraphQLFieldResolver<unknown, MyContext> = async (_, args) => {
+export const login: GraphQLFieldResolver<unknown, MyContext> = async (_, args, context) => {
   try {
     const { email, password } = args.input;
-    
+
     const user = await UserModel.findOne({ email });
     if (!user) {
+      // Définir le statut HTTP à 404 si l'utilisateur n'est pas trouvé
+      context.res.status(404);
       return {
         token: null,
         user: null,
@@ -75,6 +82,8 @@ export const login: GraphQLFieldResolver<unknown, MyContext> = async (_, args) =
 
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
+      // Définir le statut HTTP à 401 si le mot de passe est invalide
+      context.res.status(401);
       return {
         token: null,
         user: null,
@@ -88,6 +97,8 @@ export const login: GraphQLFieldResolver<unknown, MyContext> = async (_, args) =
 
     const token = generateToken(user.id);
 
+    // Définir le statut HTTP à 200 si la connexion est réussie
+    context.res.status(201);
     return {
       token,
       user: {
@@ -98,6 +109,8 @@ export const login: GraphQLFieldResolver<unknown, MyContext> = async (_, args) =
       error: null
     };
   } catch (error) {
+    // Définir le statut HTTP à 500 en cas d'erreur interne
+    context.res.status(500);
     return {
       token: null,
       user: null,

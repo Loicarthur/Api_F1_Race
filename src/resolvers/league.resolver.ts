@@ -1,5 +1,5 @@
 import { GraphQLFieldResolver } from 'graphql';
-import { LeagueModel } from '../models/League'; // Modèle pour les ligues
+import { LeagueModel } from '../models/League'; 
 import { MyContext } from '../types/MyContext';
 
 // Fonction utilitaire pour générer un code de participation
@@ -16,7 +16,7 @@ function generateJoinCode(length: number): string {
 // Resolver pour créer une ligue
 export const createLeague: GraphQLFieldResolver<unknown, MyContext> = async (_, args) => {
   try {
-    const { leagueType, leagueName, maxParticipants } = args.input;
+    const { isPrivate, leagueName, maxParticipants } = args.input;
 
     // Vérifiez si la ligue existe déjà
     const existingLeague = await LeagueModel.findOne({ leagueName });
@@ -40,11 +40,12 @@ export const createLeague: GraphQLFieldResolver<unknown, MyContext> = async (_, 
       exists = !!leagueWithJoinCode;
     }
 
-    const league = new LeagueModel({ leagueType, leagueName, maxParticipants, joinCode });
+    // Créez la nouvelle ligue
+    const league = new LeagueModel({ isPrivate, leagueName, maxParticipants, joinCode, users: [] });
     await league.save();
 
     return {
-      league: [league], 
+      league: league,
       error: null,
     };
   } catch (error) {
@@ -59,7 +60,7 @@ export const createLeague: GraphQLFieldResolver<unknown, MyContext> = async (_, 
   }
 };
 
-//Obtient toutes les ligues
+// Obtient toutes les ligues
 export const getAllLeagues: GraphQLFieldResolver<unknown, MyContext> = async () => {
   try {
     const leagues = await LeagueModel.find({});

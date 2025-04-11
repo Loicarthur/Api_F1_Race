@@ -1,11 +1,13 @@
 import { Schema, model, Document } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { userLeague } from './League';
 
 export interface User extends Document {
+  id: string;
   username: string;
   email: string;
   password: string;
-  role: string;
+  leagues: userLeague[];
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 

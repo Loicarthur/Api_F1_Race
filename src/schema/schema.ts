@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLSchema, GraphQLString, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLInputObjectType } from 'graphql';
+import { GraphQLObjectType, GraphQLSchema, GraphQLString, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLInputObjectType, GraphQLBoolean } from 'graphql';
 import { register, login, getAllUsers } from '../resolvers/auth.resolver';
 import { F1Resolver } from '../resolvers/f1.resolver';
 import { F1HistoryResolver } from '../resolvers/f1-history.resolver';
@@ -6,7 +6,7 @@ import { CarDataType, LapTimeType, TrackStatusType } from './types/f1.types';
 import { RaceHistoryType } from './types/race-history';
 import { AuthResponseType, UserType } from './types/auth.types';
 import { MyContext } from '../types/MyContext';
-import { getAllLeagues, leagueResolvers} from '../resolvers/leaugue.resolver';
+import { getAllLeagues, leagueResolvers} from '../resolvers/league.resolver';
 import {LeagueResponseType, LeagueType } from './types/league.types'; 
 const f1Resolver = new F1Resolver();
 const f1HistoryResolver = new F1HistoryResolver();
@@ -17,7 +17,7 @@ const RegisterInputType = new GraphQLInputObjectType({
   fields: () => ({
     username: { type: new GraphQLNonNull(GraphQLString) },
     email: { type: new GraphQLNonNull(GraphQLString) },
-    password: { type: new GraphQLNonNull(GraphQLString) }
+    password: { type: new GraphQLNonNull(GraphQLString) },
   })
 });
 
@@ -32,7 +32,7 @@ const LoginInputType = new GraphQLInputObjectType({
 const LeagueInputType = new GraphQLInputObjectType({
   name: 'LeagueInput',
   fields: () => ({
-    leagueType: { type: new GraphQLNonNull(GraphQLString) },
+    isPrivate: { type: new GraphQLNonNull(GraphQLBoolean) },
     leagueName: { type: new GraphQLNonNull(GraphQLString) },
     maxParticipants: { type: new GraphQLNonNull(GraphQLInt) },
   })});
