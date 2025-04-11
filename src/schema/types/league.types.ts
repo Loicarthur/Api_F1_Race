@@ -1,5 +1,5 @@
 import { GraphQLObjectType, GraphQLString, GraphQLInt, GraphQLList } from 'graphql';
-import { ErrorType } from './ErrorType'; 
+import { ErrorType } from './error.types'; 
 
 export const LeagueType = new GraphQLObjectType({
   name: 'League',

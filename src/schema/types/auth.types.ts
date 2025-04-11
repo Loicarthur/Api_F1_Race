@@ -1,5 +1,5 @@
 import { GraphQLObjectType, GraphQLString } from 'graphql';
-import { ErrorType } from '../types/ErrorType';
+import { ErrorType } from './error.types';
 // Type d'utilisateur
 export const UserType = new GraphQLObjectType({
   name: 'User',

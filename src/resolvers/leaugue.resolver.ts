@@ -1,5 +1,5 @@
 import { GraphQLFieldResolver } from 'graphql';
-import { LeagueModel } from '../models/League'; // Modèle pour les ligues
+import { LeagueModel } from '../models/League'; 
 import { MyContext } from '../types/MyContext';
 
 // Fonction utilitaire pour générer un code de participation
@@ -16,7 +16,7 @@ function generateJoinCode(length: number): string {
 // Resolver pour créer une ligue
 export const createLeague: GraphQLFieldResolver<unknown, MyContext> = async (_, args) => {
   try {
-    const { leagueType, leagueName, maxParticipants } = args.input; // Déstructurez les arguments d'entrée
+    const { leagueType, leagueName, maxParticipants } = args.input;
 
     // Vérifiez si la ligue existe déjà
     const existingLeague = await LeagueModel.findOne({ leagueName });

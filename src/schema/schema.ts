@@ -6,8 +6,8 @@ import { CarDataType, LapTimeType, TrackStatusType } from './types/f1.types';
 import { RaceHistoryType } from './types/race-history';
 import { AuthResponseType, UserType } from './types/auth.types';
 import { MyContext } from '../types/MyContext';
-import { leagueResolvers} from '../resolvers/leaugue.resolver';
-import {LeagueResponseType } from './types/league.types'; 
+import { getAllLeagues, leagueResolvers} from '../resolvers/leaugue.resolver';
+import {LeagueResponseType, LeagueType } from './types/league.types'; 
 const f1Resolver = new F1Resolver();
 const f1HistoryResolver = new F1HistoryResolver();
 
@@ -61,6 +61,9 @@ const RootQuery = new GraphQLObjectType({
       },
       resolve: f1HistoryResolver.getRaceDetails
     },
+    getAllLeagues: {
+      type: new GraphQLList(LeagueType),
+      resolve: getAllLeagues},
 
     // Données en temps réel (OpenF1)
     carData: {
