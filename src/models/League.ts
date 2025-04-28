@@ -1,7 +1,7 @@
 import { Schema, model, Document } from 'mongoose';
 import { User } from './User';
 
-//Relation entre ligue et utilisateur
+
 export interface userLeague {
   id: string;
   league: League;

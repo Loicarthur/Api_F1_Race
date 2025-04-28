@@ -21,5 +21,6 @@ export const LeagueResponseType = new GraphQLObjectType({
   fields: () => ({
     league: { type: LeagueType }, 
     error: { type: ErrorType },
+    httpStatus: { type: GraphQLInt },
   }),
 });
