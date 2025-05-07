@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { User } from '../models/User';
 
 export interface MyContext {
+  [x: string]: GraphQLResolveInfo;
   req: Request;
   res: Response;
   user?: User | null;

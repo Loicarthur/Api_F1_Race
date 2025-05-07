@@ -1,151 +1,260 @@
-import { GraphQLObjectType, GraphQLSchema, GraphQLString, GraphQLInt, GraphQLList, GraphQLNonNull, GraphQLInputObjectType, GraphQLBoolean } from 'graphql';
-import { register, login, getAllUsers } from '../resolvers/auth.resolver';
-import { F1Resolver } from '../resolvers/f1.resolver';
-import { F1HistoryResolver } from '../resolvers/f1-history.resolver';
-import { CarDataType, LapTimeType, TrackStatusType } from './types/f1.types';
-import { RaceHistoryType } from './types/race-history';
-import { AuthResponseType, UserType } from './types/auth.types';
-import { MyContext } from '../types/MyContext';
-import { getAllLeagues, leagueResolvers} from '../resolvers/league.resolver';
-import {LeagueResponseType, LeagueType } from './types/league.types'; 
+import {
+  GraphQLObjectType,
+  GraphQLSchema,
+  GraphQLString,
+  GraphQLInt,
+  GraphQLList,
+  GraphQLNonNull,
+  GraphQLInputObjectType,
+  GraphQLBoolean,
+} from "graphql";
+import { register, login, getAllUsers } from "../resolvers/auth.resolver";
+import { F1Resolver } from "../resolvers/f1.resolver";
+import { F1HistoryResolver } from "../resolvers/f1-history.resolver";
+import { CarDataType, LapTimeType, TrackStatusType } from "./types/f1.types";
+import { RaceHistoryType } from "./types/race-history";
+import { AuthResponseType, UserType } from "./types/auth.types";
+import { MyContext } from "../types/MyContext";
+import { leagueResolvers } from "../resolvers/league.resolver";
+import {
+  DeleteLeagueResponseType,
+  GetMembersOfLeagueResponseType,
+  LeagueResponseType,
+  LeagueType,
+  PublicLeaguesResponseType,
+  LeagueByJoinCodeResponseType,
+} from "./types/league.types";
+
 const f1Resolver = new F1Resolver();
 const f1HistoryResolver = new F1HistoryResolver();
 
-// Types d'entrée pour l'authentification
+// Input types
 const RegisterInputType = new GraphQLInputObjectType({
-  name: 'RegisterInput',
+  name: "RegisterInput",
   fields: () => ({
     username: { type: new GraphQLNonNull(GraphQLString) },
     email: { type: new GraphQLNonNull(GraphQLString) },
     password: { type: new GraphQLNonNull(GraphQLString) },
-  })
+  }),
 });
 
 const LoginInputType = new GraphQLInputObjectType({
-  name: 'LoginInput',
+  name: "LoginInput",
   fields: () => ({
     email: { type: new GraphQLNonNull(GraphQLString) },
-    password: { type: new GraphQLNonNull(GraphQLString) }
-  })
+    password: { type: new GraphQLNonNull(GraphQLString) },
+  }),
 });
 
 const LeagueInputType = new GraphQLInputObjectType({
-  name: 'LeagueInput',
+  name: "LeagueInput",
   fields: () => ({
     isPrivate: { type: new GraphQLNonNull(GraphQLBoolean) },
     leagueName: { type: new GraphQLNonNull(GraphQLString) },
     maxParticipants: { type: new GraphQLNonNull(GraphQLInt) },
-  })});
+  }),
+});
 
-const RootQuery = new GraphQLObjectType({
-  name: 'RootQueryType',
+// Input types for league operations
+const ModifyLeagueInputType = new GraphQLInputObjectType({
+  name: "ModifyLeagueInput",
   fields: () => ({
-    // Liste des utilisateurs
+    isPrivate: { type: GraphQLBoolean },
+    leagueName: { type: GraphQLString },
+    maxParticipants: { type: GraphQLInt },
+  }),
+});
+
+const AddUserToLeagueInputType = new GraphQLInputObjectType({
+  name: "AddUserToLeagueInput",
+  fields: () => ({
+    leagueId: { type: new GraphQLNonNull(GraphQLString) },
+    userId: { type: new GraphQLNonNull(GraphQLString) },
+    admin: { type: GraphQLBoolean },
+  }),
+});
+
+const GetLeaguesByUserIdInputType = new GraphQLInputObjectType({
+  name: "GetLeaguesByUserIdInput",
+  fields: () => ({
+    userId: { type: new GraphQLNonNull(GraphQLString) },
+  }),
+});
+
+const GetLeagueByJoinCodeInputType = new GraphQLInputObjectType({
+  name: "GetLeagueByJoinCodeInput",
+  fields: () => ({
+    joinCode: { type: new GraphQLNonNull(GraphQLString) },
+  }),
+});
+
+const DeleteLeagueInputType = new GraphQLInputObjectType({
+  name: "DeleteLeagueInput",
+  fields: () => ({
+    leagueId: { type: new GraphQLNonNull(GraphQLString) },
+  }),
+});
+
+// Root Query
+const RootQuery = new GraphQLObjectType({
+  name: "RootQueryType",
+  fields: () => ({
     getAllUsers: {
       type: new GraphQLList(UserType),
-      resolve: getAllUsers
+      resolve: getAllUsers,
     },
-    
-    // Données historiques (api-sports.io)
     getPastRaces: {
       type: new GraphQLList(RaceHistoryType),
       args: {
-        season: { type: GraphQLInt }
+        season: { type: GraphQLInt },
       },
-      resolve: f1HistoryResolver.getPastRaceResults
+      resolve: f1HistoryResolver.getPastRaceResults,
     },
     getRaceDetails: {
       type: RaceHistoryType,
       args: {
-        raceId: { type: GraphQLInt }
+        raceId: { type: GraphQLInt },
       },
-      resolve: f1HistoryResolver.getRaceDetails
+      resolve: f1HistoryResolver.getRaceDetails,
     },
     getAllLeagues: {
       type: new GraphQLList(LeagueType),
-      resolve: getAllLeagues},
-
-    // Données en temps réel (OpenF1)
+      resolve: leagueResolvers.Query.leagues,
+    },
+    publicLeagues: {
+      type: PublicLeaguesResponseType,
+      resolve: leagueResolvers.Query.publicLeagues,
+    },
+    leaguesByUserId: {
+      type: new GraphQLList(LeagueType),
+      args: {
+        input: { type: new GraphQLNonNull(GetLeaguesByUserIdInputType) },
+      },
+      resolve: async (_, { input }, context) => {
+        const leagues = await leagueResolvers.Query.leaguesByUserId(
+          _,
+          input,
+          context,
+          context.info
+        );
+        return leagues; 
+      },
+    },
+    leagueByJoinCode: {
+      type: LeagueByJoinCodeResponseType, // Utilise le type personnalisé
+      args: {
+        input: { type: new GraphQLNonNull(GetLeagueByJoinCodeInputType) },
+      },
+      resolve: async (_, { input }, context) => {
+        return leagueResolvers.Query.leagueByJoinCode(_, { input }, context, context.info);
+      },
+    },
+    getMembersOfLeague: {
+      type: GetMembersOfLeagueResponseType, 
+      args: {
+        leagueId: { type: new GraphQLNonNull(GraphQLString) }, 
+      },
+      resolve: async (
+        _: unknown,
+        args: { [key: string]: any },
+        context: MyContext
+      ) => {
+        const { leagueId } = args as { leagueId: string };
+        return leagueResolvers.Query.getMembersOfLeague(
+          _,
+          { leagueId },
+          context,
+          context.info
+        );
+      },
+    },
     carData: {
       type: new GraphQLList(CarDataType),
       args: {
         session_key: { type: GraphQLInt },
-        driver_number: { type: GraphQLInt }
+        driver_number: { type: GraphQLInt },
       },
-      resolve: f1Resolver.getCarData
+      resolve: f1Resolver.getCarData,
     },
     lapTimes: {
       type: new GraphQLList(LapTimeType),
       args: {
         session_key: { type: GraphQLInt },
-        driver_number: { type: GraphQLInt }
+        driver_number: { type: GraphQLInt },
       },
-      resolve: f1Resolver.getLapTimes
+      resolve: f1Resolver.getLapTimes,
     },
     trackStatus: {
       type: TrackStatusType,
       args: {
-        session_key: { type: GraphQLInt }
+        session_key: { type: GraphQLInt },
       },
-      resolve: f1Resolver.getTrackStatus
+      resolve: f1Resolver.getTrackStatus,
     },
     sessions: {
-      type: new GraphQLList(new GraphQLObjectType({
-        name: 'Session',
-        fields: {
-          session_key: { type: GraphQLInt },
-          meeting_key: { type: GraphQLInt },
-          session_name: { type: GraphQLString },
-          session_type: { type: GraphQLString },
-          session_date: { type: GraphQLString }
-        }
-      })),
+      type: new GraphQLList(
+        new GraphQLObjectType({
+          name: "Session",
+          fields: {
+            session_key: { type: GraphQLInt },
+            meeting_key: { type: GraphQLInt },
+            session_name: { type: GraphQLString },
+            session_type: { type: GraphQLString },
+            session_date: { type: GraphQLString },
+          },
+        })
+      ),
       args: {
         year: { type: GraphQLInt },
         round: { type: GraphQLInt },
-        session_type: { type: GraphQLString }
+        session_type: { type: GraphQLString },
       },
-      resolve: f1Resolver.getSessions
+      resolve: f1Resolver.getSessions,
     },
     sessionDetails: {
       type: new GraphQLObjectType({
-        name: 'SessionDetails',
+        name: "SessionDetails",
         fields: {
-          drivers: { type: new GraphQLList(new GraphQLObjectType({
-            name: 'Driver',
-            fields: {
-              driver_number: { type: GraphQLInt },
-              name: { type: GraphQLString },
-              team: { type: GraphQLString }
-            }
-          }))},
+          drivers: {
+            type: new GraphQLList(
+              new GraphQLObjectType({
+                name: "Driver",
+                fields: {
+                  driver_number: { type: GraphQLInt },
+                  name: { type: GraphQLString },
+                  team: { type: GraphQLString },
+                },
+              })
+            ),
+          },
           lapTimes: { type: new GraphQLList(LapTimeType) },
           trackStatus: { type: TrackStatusType },
-          carData: { type: new GraphQLList(CarDataType) }
-        }
+          carData: { type: new GraphQLList(CarDataType) },
+        },
       }),
       args: {
-        session_key: { type: GraphQLInt }
+        session_key: { type: GraphQLInt },
       },
-      resolve: f1Resolver.getSessionDetails
-    }
-  })
+      resolve: f1Resolver.getSessionDetails,
+    },
+  }),
 });
 
+// Root Mutation
 const RootMutation = new GraphQLObjectType<unknown, MyContext>({
-  name: 'RootMutation',
+  name: "RootMutation",
   fields: () => ({
     register: {
       type: AuthResponseType,
       args: {
-        input: { type: new GraphQLNonNull(RegisterInputType) }
+        input: { type: new GraphQLNonNull(RegisterInputType) },
       },
       resolve: register,
     },
     login: {
       type: AuthResponseType,
       args: {
-        input: { type: new GraphQLNonNull(LoginInputType) }
+        input: { type: new GraphQLNonNull(LoginInputType) },
       },
       resolve: login,
     },
@@ -156,10 +265,64 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
       },
       resolve: leagueResolvers.Mutation.createLeague,
     },
+    deleteLeague: {
+      type: DeleteLeagueResponseType, // Utilise le type personnalisé
+      args: {
+        input: { type: new GraphQLNonNull(DeleteLeagueInputType) },
+      },
+      resolve: async (_, { input: { leagueId } }, context) => {
+        return leagueResolvers.Mutation.deleteLeague(
+          _,
+          { leagueId },
+          context,
+          context.info
+        );
+      },
+    },
+    modifyLeague: {
+      type: LeagueResponseType,
+      args: {
+        leagueId: { type: new GraphQLNonNull(GraphQLString) },
+        input: { type: new GraphQLNonNull(ModifyLeagueInputType) },
+      },
+      resolve: async (_, args, context) => {
+        const { leagueId, input } = args;
+        return leagueResolvers.Mutation.modifyLeague(
+          _,
+          { leagueId, input },
+          context,
+          context.info
+        );
+      },
+    },
+    addUserToLeague: {
+      type: LeagueResponseType,
+      args: {
+        input: { type: new GraphQLNonNull(AddUserToLeagueInputType) },
+      },
+      resolve: async (
+        _: unknown,
+        args: { [key: string]: any },
+        context: MyContext
+      ) => {
+        const { leagueId, userId, admin } = args.input as {
+          leagueId: string;
+          userId: string;
+          admin?: boolean;
+        };
+        return leagueResolvers.Mutation.addUserToLeague(
+          null,
+          { input: { leagueId, userId, admin } },
+          context,
+          context.info
+        );
+      },
+    },
   }),
 });
 
+// Export the schema
 export default new GraphQLSchema({
   query: RootQuery,
-  mutation: RootMutation
+  mutation: RootMutation,
 });
