@@ -8,6 +8,9 @@ export interface User extends Document {
   email: string;
   password: string;
   leagues: userLeague[];
+  predictedPosition?: string; // Position prédite par l'utilisateur
+  predictedDNF?: string; // Prédiction du premier DNF
+  totalPoints?: number; // Points cumulés par l'utilisateur
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -30,7 +33,17 @@ const UserSchema = new Schema({
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
-  }
+  },
+  predictedPosition: {
+    type: String,
+  },
+  predictedDNF: {
+    type: String,
+  },
+  totalPoints: {
+    type: Number,
+    default: 0,
+  },
 });
 
 // Hash le mot de passe avant de sauvegarder

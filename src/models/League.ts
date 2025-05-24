@@ -15,6 +15,8 @@ export interface League extends Document {
   maxParticipants: number;
   joinCode: string;
   users: userLeague[];
+  actualDNF?: string; // Premier DNF réel
+  actualPositions?: { [position: string]: string }; 
 }
 
 const LeagueSchema = new Schema<League>({
@@ -59,6 +61,13 @@ const LeagueSchema = new Schema<League>({
       default: false, 
     },
   }],
+  actualDNF: {
+    type: String, 
+  },
+  actualPositions: {
+    type: Map,
+    of: String, 
+  },
 });
 
 export const LeagueModel = model<League>('League', LeagueSchema);

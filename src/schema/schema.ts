@@ -24,6 +24,7 @@ import {
   PublicLeaguesResponseType,
   LeagueByJoinCodeResponseType,
 } from "./types/league.types";
+import { LeagueModel } from '../models/League';
 
 const f1Resolver = new F1Resolver();
 const f1HistoryResolver = new F1HistoryResolver();
@@ -93,6 +94,88 @@ const DeleteLeagueInputType = new GraphQLInputObjectType({
   fields: () => ({
     leagueId: { type: new GraphQLNonNull(GraphQLString) },
   }),
+});
+
+const SubmitPredictionInputType = new GraphQLInputObjectType({
+  name: "SubmitPredictionInput",
+  fields: () => ({
+    leagueId: { type: new GraphQLNonNull(GraphQLString) },
+    userId: { type: new GraphQLNonNull(GraphQLString) },
+    predictedPosition: { type: new GraphQLNonNull(GraphQLString) },
+    predictedDNF: { type: new GraphQLNonNull(GraphQLString) },
+  }),
+});
+
+const SubmitResultsInputType = new GraphQLInputObjectType({
+  name: "SubmitResultsInput",
+  fields: () => ({
+    leagueId: { type: new GraphQLNonNull(GraphQLString) },
+    actualDNF: { type: new GraphQLNonNull(GraphQLString) },
+    actualPositions: {
+      type: new GraphQLNonNull(
+        new GraphQLInputObjectType({
+          name: "ActualPositionsInput",
+          fields: {
+            P1: { type: GraphQLString },
+            P2: { type: GraphQLString },
+            P3: { type: GraphQLString },
+            P4: { type: GraphQLString },
+            P5: { type: GraphQLString },
+            P6: { type: GraphQLString },
+            P7: { type: GraphQLString },
+            P8: { type: GraphQLString },
+            P9: { type: GraphQLString },
+            P10: { type: GraphQLString },
+            P11: { type: GraphQLString },
+            P12: { type: GraphQLString },
+            P13: { type: GraphQLString },
+            P14: { type: GraphQLString },
+            P15: { type: GraphQLString },
+            P16: { type: GraphQLString },
+            P17: { type: GraphQLString },
+            P18: { type: GraphQLString },
+            P19: { type: GraphQLString },
+            P20: { type: GraphQLString },
+          },
+        })
+      ),
+    },
+  }),
+});
+
+const LeaveLeagueInputType = new GraphQLInputObjectType({
+  name: 'LeaveLeagueInput',
+  fields: {
+    leagueId: { type: new GraphQLNonNull(GraphQLString) },
+    userId: { type: new GraphQLNonNull(GraphQLString) },
+  },
+});
+
+const PlayerRankingType = new GraphQLObjectType({
+  name: "PlayerRanking",
+  fields: {
+    id: { type: GraphQLString },
+    username: { type: GraphQLString },
+    totalPoints: { type: GraphQLInt },
+    positionPoints: { type: GraphQLInt },
+    bonusPoints: { type: GraphQLInt },
+  },
+});
+
+const LeagueRankingResponseType = new GraphQLObjectType({
+  name: "LeagueRankingResponse",
+  fields: {
+    ranking: { type: new GraphQLList(PlayerRankingType) },
+    httpStatus: { type: GraphQLInt },
+  },
+});
+
+const MutationResponseType = new GraphQLObjectType({
+  name: "MutationResponse",
+  fields: {
+    success: { type: GraphQLBoolean },
+    message: { type: GraphQLString },
+  },
 });
 
 // Root Query
@@ -237,8 +320,24 @@ const RootQuery = new GraphQLObjectType({
       },
       resolve: f1Resolver.getSessionDetails,
     },
+    calculateLeagueRanking: {
+      type: LeagueRankingResponseType, // Type de réponse
+      args: {
+        leagueId: { type: new GraphQLNonNull(GraphQLString) }, // Argument requis
+      },
+      resolve: async (_, { leagueId }) => {
+        const league = await LeagueModel.findById(leagueId);
+        if (!league) {
+          throw new Error("League not found");
+        }
+        return {
+          httpStatus: 200,
+        };
+      },
+    },
   }),
 });
+
 
 // Root Mutation
 const RootMutation = new GraphQLObjectType<unknown, MyContext>({
@@ -318,6 +417,65 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
         );
       },
     },
+    leaveLeague: {
+      type: MutationResponseType,
+      args: {
+        input: { type: new GraphQLNonNull(LeaveLeagueInputType) },
+      },
+      resolve: async (
+        _: unknown,
+        args: { [argName: string]: any }, // Adjusted to match GraphQLFieldResolver signature
+        context: MyContext
+      ) => {
+        const { leagueId, userId } = args.input as { leagueId: string; userId: string }; // Explicit casting
+        return await leagueResolvers.Mutation.leaveLeague(_, { input: { leagueId, userId } }, context, context.info);
+      },
+    },
+
+    submitPrediction: {
+      type: MutationResponseType,
+      args: {
+        input: { type: new GraphQLNonNull(SubmitPredictionInputType) },
+      },
+      resolve: async (
+        _: unknown,
+        args: { [argName: string]: any },
+        context: MyContext
+      ) => {
+        const { leagueId, userId, predictedPosition, predictedDNF } = args.input as {
+          leagueId: string;
+          userId: string;
+          predictedPosition: string;
+          predictedDNF: string;
+        };
+        return await leagueResolvers.Mutation.submitPrediction(_, { input: { leagueId, userId, predictedPosition, predictedDNF } }, context, context.info);
+      },
+    },
+
+    submitResults: {
+      type: MutationResponseType, // Type de réponse
+      args: {
+        input: { type: new GraphQLNonNull(SubmitResultsInputType) }, // Type d'entrée
+      },
+      resolve: async (
+        _: unknown,
+        args: { [argName: string]: any },
+        context: MyContext
+      ) => {
+        const { leagueId, actualDNF, actualPositions } = args.input as {
+          leagueId: string;
+          actualDNF: string;
+          actualPositions: { [position: string]: string };
+        };
+        return await leagueResolvers.Mutation.submitResults(
+          _,
+          { input: { leagueId, actualDNF, actualPositions } },
+          context,
+          context.info
+        );
+      },
+    },
+    
   }),
 });
 
@@ -326,3 +484,5 @@ export default new GraphQLSchema({
   query: RootQuery,
   mutation: RootMutation,
 });
+
+
