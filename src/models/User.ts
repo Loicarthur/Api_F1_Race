@@ -8,6 +8,7 @@ export interface User extends Document {
   email: string;
   password: string;
   leagues: userLeague[];
+  role: string;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -26,6 +27,8 @@ const UserSchema = new Schema({
     type: String,
     required: true
   },
+  leagues: [{ type: Schema.Types.ObjectId, ref: 'UserLeague' }],
+  bets: [{ type: Schema.Types.ObjectId, ref: 'BetSelectionResult' }],
   role: {
     type: String,
     enum: ['user', 'admin'],

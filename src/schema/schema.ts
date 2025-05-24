@@ -19,9 +19,9 @@ import { leagueResolvers } from "../resolvers/league.resolver";
 import { gpClassementResolvers } from '../resolvers/gp-classement.resolver';
 import { f1ResultsResolvers } from '../resolvers/f1-results.resolver';
 import { F1GrandPrixType, DriverStatsType, StandingEntryType } from './types/f1-results.types';
-import { tracksBetResolvers } from "../resolvers/tracks-bet.resolver";
-import { GpClassementType, CreateGpClassementInput, UpdateGpClassementResultInput } from "./types/gp-classement.types";
-import { TracksBetType, CreateBetInput, UpdateBetResultInput } from "./types/tracks-bet.types";
+
+import { GPClassementType } from "./types/gp-classement.types";
+
 import {
   DeleteLeagueResponseType,
   GetMembersOfLeagueResponseType,
@@ -132,33 +132,21 @@ const RootQuery = new GraphQLObjectType({
       resolve: leagueResolvers.Query.leagues,
     },
     gpClassement: {
-      type: new GraphQLList(GpClassementType),
+      type: new GraphQLList(GPClassementType),
       args: {
         gpId: { type: new GraphQLNonNull(GraphQLString) },
       },
       resolve: gpClassementResolvers.Query.gpClassement,
     },
     userClassements: {
-      type: new GraphQLList(GpClassementType),
+      type: new GraphQLList(GPClassementType),
       args: {
         userId: { type: new GraphQLNonNull(GraphQLString) },
       },
       resolve: gpClassementResolvers.Query.userClassements,
     },
-    gpBets: {
-      type: new GraphQLList(TracksBetType),
-      args: {
-        gpId: { type: new GraphQLNonNull(GraphQLString) },
-      },
-      resolve: tracksBetResolvers.Query.gpBets,
-    },
-    userBets: {
-      type: new GraphQLList(TracksBetType),
-      args: {
-        userId: { type: new GraphQLNonNull(GraphQLString) },
-      },
-      resolve: tracksBetResolvers.Query.userBets,
-    },
+    
+    
     publicLeagues: {
       type: PublicLeaguesResponseType,
       resolve: leagueResolvers.Query.publicLeagues,
@@ -168,12 +156,12 @@ const RootQuery = new GraphQLObjectType({
       args: {
         input: { type: new GraphQLNonNull(GetLeaguesByUserIdInputType) },
       },
-      resolve: async (_, { input }, context) => {
+      resolve: async (_, { input }, context, info) => {
         const leagues = await leagueResolvers.Query.leaguesByUserId(
           _,
           input,
           context,
-          context.info
+          info
         );
         return leagues;
       },
@@ -183,8 +171,8 @@ const RootQuery = new GraphQLObjectType({
       args: {
         input: { type: new GraphQLNonNull(GetLeagueByJoinCodeInputType) },
       },
-      resolve: async (_, { input }, context) => {
-        return leagueResolvers.Query.leagueByJoinCode(_, { input }, context, context.info);
+      resolve: async (_, { input }, context, info) => {
+        return leagueResolvers.Query.leagueByJoinCode(_, { input }, context, info);
       },
     },
     getMembersOfLeague: {
@@ -195,14 +183,15 @@ const RootQuery = new GraphQLObjectType({
       resolve: async (
         _: unknown,
         args: { [key: string]: any },
-        context: MyContext
+        context: MyContext,
+        info
       ) => {
         const { leagueId } = args as { leagueId: string };
         return leagueResolvers.Query.getMembersOfLeague(
           _,
           { leagueId },
           context,
-          context.info
+          info
         );
       },
     },
@@ -358,12 +347,12 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
       args: {
         input: { type: new GraphQLNonNull(DeleteLeagueInputType) },
       },
-      resolve: async (_, { input: { leagueId } }, context) => {
+      resolve: async (_, { input: { leagueId } }, context, info) => {
         return leagueResolvers.Mutation.deleteLeague(
           _,
           { leagueId },
           context,
-          context.info
+          info
         );
       },
     },
@@ -373,47 +362,35 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
         leagueId: { type: new GraphQLNonNull(GraphQLString) },
         input: { type: new GraphQLNonNull(ModifyLeagueInputType) },
       },
-      resolve: async (_, args, context) => {
+      resolve: async (_, args, context, info) => {
         const { leagueId, input } = args;
         return leagueResolvers.Mutation.modifyLeague(
           _,
           { leagueId, input },
           context,
-          context.info
+          info
         );
       },
     },
     // GP Classement mutations
     createGpClassement: {
-      type: GpClassementType,
+      type: GPClassementType,
       args: {
-        input: { type: new GraphQLNonNull(CreateGpClassementInput) }
+        gpId: { type: new GraphQLNonNull(GraphQLString) }
       },
-      resolve: gpClassementResolvers.Mutation.createGpClassement
+      resolve: gpClassementResolvers.Mutation.createGPClassement,
     },
     updateGpClassementResult: {
-      type: GpClassementType,
+      type: GPClassementType,
       args: {
-        input: { type: new GraphQLNonNull(UpdateGpClassementResultInput) }
+        gpId: { type: new GraphQLNonNull(GraphQLString) }
       },
-      resolve: gpClassementResolvers.Mutation.updateGpClassementResult
+      resolve: gpClassementResolvers.Mutation.updateGPClassementResult,
     },
 
     // Tracks Bet mutations
-    createBet: {
-      type: TracksBetType,
-      args: {
-        input: { type: new GraphQLNonNull(CreateBetInput) }
-      },
-      resolve: tracksBetResolvers.Mutation.createBet
-    },
-    updateBetResult: {
-      type: TracksBetType,
-      args: {
-        input: { type: new GraphQLNonNull(UpdateBetResultInput) }
-      },
-      resolve: tracksBetResolvers.Mutation.updateBetResult
-    },
+    
+    
 
     addUserToLeague: {
       type: LeagueResponseType,
@@ -423,7 +400,8 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
       resolve: async (
         _: unknown,
         args: { [key: string]: any },
-        context: MyContext
+        context: MyContext,
+        info
       ) => {
         const { leagueId, userId, admin } = args.input as {
           leagueId: string;
@@ -434,7 +412,7 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
           null,
           { input: { leagueId, userId, admin } },
           context,
-          context.info
+          info
         );
       },
     },

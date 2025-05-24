@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLInt, GraphQLBoolean, GraphQLList, GraphQLFloat } from 'graphql';
+import { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLInt, GraphQLList, GraphQLFloat } from 'graphql';
 
 // Types de base
 export const AvatarType = new GraphQLObjectType({
@@ -22,15 +22,15 @@ export const TrackType = new GraphQLObjectType({
 });
 
 // Déclaration préalable des types pour éviter les références circulaires
-let PiloteType: GraphQLObjectType;
+let DriverType: GraphQLObjectType;
 let EcurieType: GraphQLObjectType;
-let PiloteEcurieType: GraphQLObjectType;
+let DriverEcurieType: GraphQLObjectType;
 let GPType: GraphQLObjectType;
-let GPPiloteType: GraphQLObjectType;
-let GPClassementType: GraphQLObjectType;
+let GPDriverType: GraphQLObjectType;
+
 
 // Initialisation des types avec leurs champs
-PiloteType = new GraphQLObjectType({
+DriverType = new GraphQLObjectType({
   name: 'Pilote',
   fields: () => ({
     id: { type: GraphQLID },
@@ -38,7 +38,7 @@ PiloteType = new GraphQLObjectType({
     name: { type: GraphQLString },
     pictureUrl: { type: GraphQLString },
     nameAcronym: { type: GraphQLString },
-    ecuries: { type: new GraphQLList(PiloteEcurieType) }
+    ecuries: { type: new GraphQLList(DriverEcurieType) }
   })
 });
 
@@ -50,51 +50,40 @@ EcurieType = new GraphQLObjectType({
     name: { type: GraphQLString },
     logoUrl: { type: GraphQLString },
     color: { type: GraphQLString },
-    pilotes: { type: new GraphQLList(PiloteEcurieType) }
+    drivers: { type: new GraphQLList(DriverEcurieType) }
   })
 });
 
-PiloteEcurieType = new GraphQLObjectType({
-  name: 'PiloteEcurie',
+DriverEcurieType = new GraphQLObjectType({
+  name: 'DriverEcurie',
   fields: () => ({
     id: { type: GraphQLID },
-    pilote: { type: PiloteType },
+    driver: { type: DriverType },
     ecurie: { type: EcurieType },
     year: { type: GraphQLString }
   })
 });
 
-GPPiloteType = new GraphQLObjectType({
+GPDriverType = new GraphQLObjectType({
   name: 'GPPilote',
   fields: () => ({
     id: { type: GraphQLID },
     gp: { type: GPType },
-    pilote: { type: PiloteType },
+    driver: { type: DriverType },
     ecurie: { type: EcurieType }
-  })
-});
-
-GPClassementType = new GraphQLObjectType({
-  name: 'GPClassement',
-  fields: () => ({
-    id: { type: GraphQLID },
-    gp: { type: GPType },
-    gpPilote: { type: GPPiloteType },
-    isDNF: { type: GraphQLBoolean },
-    position: { type: GraphQLInt }
   })
 });
 
 GPType = new GraphQLObjectType({
   name: 'GP',
   fields: () => ({
-    id: { type: GraphQLID },
-    idApiRace: { type: GraphQLInt },
-    season: { type: GraphQLString },
-    datetime: { type: GraphQLString },
+    id: { type: GraphQLInt },
+    name: { type: GraphQLString },
+    round: { type: GraphQLInt },
     track: { type: TrackType },
-    pilotes: { type: new GraphQLList(GPPiloteType) },
-    classement: { type: new GraphQLList(GPClassementType) }
+    dateTime: { type: GraphQLString },
+    drivers: { type: new GraphQLList(DriverType) },
+    classement: { type: new GraphQLList(require('./gp-classement.types').GPClassementType) }
   })
 });
 
@@ -140,4 +129,4 @@ export const TrackStatusType = new GraphQLObjectType({
 });
 
 // Export des types
-export { PiloteType, EcurieType, PiloteEcurieType, GPType, GPPiloteType, GPClassementType };
+export { DriverType, EcurieType, DriverEcurieType, GPType, GPDriverType };

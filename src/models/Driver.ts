@@ -1,25 +1,18 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { Schema, model, Document } from 'mongoose';
+// import { Ecurie } from './Ecurie';
 
 export interface IDriver extends Document {
-  driverId: string;
-  code: string;
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-  nationality: string;
-  team: string;
-  lastUpdated: Date;
+  name: string;
+  picture: string;
+  trigram: string;
+  // ecurie: Ecurie['_id']; // référence à l'écurie
 }
 
-const DriverSchema: Schema = new Schema({
-  driverId: { type: String, required: true, unique: true, index: true },
-  code: { type: String, required: true, index: true },
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true, index: true },
-  dateOfBirth: { type: String, required: true },
-  nationality: { type: String, required: true },
-  team: { type: String, required: true, index: true },
-  lastUpdated: { type: Date, default: Date.now }
+const DriverSchema = new Schema<IDriver>({
+  name: { type: String, required: true },
+  picture: { type: String, required: true },
+  trigram: { type: String, required: true },
+  // ecurie: { type: Schema.Types.ObjectId, ref: 'Ecurie', required: true },
 });
 
-export default mongoose.model<IDriver>('F1Driver', DriverSchema);
+export default model<IDriver>('Driver', DriverSchema);

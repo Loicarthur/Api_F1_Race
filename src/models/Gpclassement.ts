@@ -1,48 +1,33 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 
-export interface IGpClassement extends Document {
-  gp: mongoose.Types.ObjectId;
-  user: mongoose.Types.ObjectId;
-  predictedDrivers: string[];
+export interface IGPClassement extends Document {
+  race: Types.ObjectId;
+  driver: Types.ObjectId;
+  isDNF: boolean;
+  position: number;
+  time: string;
+  points: number;
+  score?: number;
   actualResult?: {
     position: number;
-    points: number;
+    points?: number;
+    // Ajoute ici d'autres propriétés si besoin
   };
-  score: number;
-  createdAt: Date;
 }
 
-const GpClassementSchema: Schema = new Schema({
-  gp: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Gp', 
-    required: true 
-  },
-  user: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
-  },
-  predictedDrivers: [{ 
-    type: String, 
-    required: true 
-  }],
+const GPClassementSchema = new Schema({
+  race: { type: Schema.Types.ObjectId, ref: 'GP', required: true },
+  driver: { type: Schema.Types.ObjectId, ref: 'Driver', required: true },
+  isDNF: { type: Boolean, required: true },
+  position: { type: Number, required: true },
+  time: { type: String, required: true },
+  points: { type: Number, required: true },
+  score: { type: Number, default: 0 },
   actualResult: {
-    position: { 
-      type: Number 
-    },
-    points: { 
-      type: Number 
-    }
-  },
-  score: { 
-    type: Number, 
-    default: 0 
-  },
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
+    position: { type: Number },
+    points: { type: Number },
+    // Ajoute ici d'autres propriétés si besoin
   }
 });
 
-export const GpClassement = mongoose.model<IGpClassement>('GpClassement', GpClassementSchema);
+export default model<IGPClassement>('GPClassement', GPClassementSchema);

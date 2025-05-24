@@ -1,16 +1,16 @@
 import { GraphQLFieldResolver } from 'graphql';
 import { MyContext } from '../types/MyContext';
-import { GpClassement } from '../models/Gpclassement';
+import GPClassement from '../models/Gpclassement';
 
-export class GpClassementResolver {
+export class GPClassementResolver {
   // Créer un nouveau classement pour un GP
-  createGpClassement: GraphQLFieldResolver<any, MyContext> = async (_, { input }, context) => {
+  createGPClassement: GraphQLFieldResolver<any, MyContext> = async (_, { input }, context) => {
     try {
       if (!context.user) {
         throw new Error('User not authenticated');
       }
 
-      const gpClassement = new GpClassement({
+      const gpClassement = new GPClassement({
         gp: input.gpId,
         user: context.user._id,
         predictedDrivers: input.predictedDrivers,
@@ -27,9 +27,9 @@ export class GpClassementResolver {
   };
 
   // Mettre à jour le résultat et le score
-  updateGpClassementResult: GraphQLFieldResolver<any, MyContext> = async (_, { input }) => {
+  updateGPClassementResult: GraphQLFieldResolver<any, MyContext> = async (_, { input }) => {
     try {
-      const gpClassement = await GpClassement.findById(input.classementId);
+      const gpClassement = await GPClassement.findById(input.classementId);
       if (!gpClassement) {
         throw new Error('GP classement not found');
       }
@@ -49,9 +49,9 @@ export class GpClassementResolver {
   };
 
   // Obtenir le classement d'un GP
-  getGpClassement: GraphQLFieldResolver<any, MyContext> = async (_, { gpId }) => {
+  getGPClassement: GraphQLFieldResolver<any, MyContext> = async (_, { gpId }) => {
     try {
-      return await GpClassement.find({ gp: gpId })
+      return await GPClassement.find({ gp: gpId })
         .populate('user', 'username')
         .populate('gp')
         .sort('-score');
@@ -64,7 +64,7 @@ export class GpClassementResolver {
   // Obtenir les classements d'un utilisateur
   getUserClassements: GraphQLFieldResolver<any, MyContext> = async (_, { userId }) => {
     try {
-      return await GpClassement.find({ user: userId })
+      return await GPClassement.find({ user: userId })
         .populate('gp')
         .sort('-createdAt');
     } catch (error) {
@@ -77,11 +77,11 @@ export class GpClassementResolver {
 // Export des resolvers
 export const gpClassementResolvers = {
   Query: {
-    gpClassement: new GpClassementResolver().getGpClassement,
-    userClassements: new GpClassementResolver().getUserClassements,
+    gpClassement: new GPClassementResolver().getGPClassement,
+    userClassements: new GPClassementResolver().getUserClassements,
   },
   Mutation: {
-    createGpClassement: new GpClassementResolver().createGpClassement,
-    updateGpClassementResult: new GpClassementResolver().updateGpClassementResult,
+    createGPClassement: new GPClassementResolver().createGPClassement,
+    updateGPClassementResult: new GPClassementResolver().updateGPClassementResult,
   }
 };
