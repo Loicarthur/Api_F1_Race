@@ -30,8 +30,8 @@ const TeamType = new GraphQLObjectType({
 });
 
 // Type pour les résultats d'un pilote dans une course
-const RaceResultType = new GraphQLObjectType({
-  name: 'RaceResult',
+const RaceHistoryResultType = new GraphQLObjectType({
+  name: 'RaceHistoryResult',
   fields: {
     position: { type: GraphQLInt },
     driver: { type: RaceHistoryDriverType },
@@ -55,6 +55,6 @@ export const RaceHistoryType = new GraphQLObjectType({
     type: { type: GraphQLString },
     date: { type: GraphQLString },
     timezone: { type: GraphQLString },
-    results: { type: new GraphQLList(RaceResultType) }
+    results: { type: new GraphQLList(RaceHistoryResultType) }
   }
 });
