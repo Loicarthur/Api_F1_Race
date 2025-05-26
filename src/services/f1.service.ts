@@ -1,3 +1,4 @@
+// f1.service = pour les résultats, classements, infos en détail sur les courses.
 import axios from 'axios';
 
 export class F1Service {
@@ -5,6 +6,30 @@ export class F1Service {
 
   constructor() {
     this.baseUrl = 'https://api.openf1.org/v1';
+  }
+
+  /**
+   * Récupère les résultats du dernier GP via l'API MDS Paris
+   */
+  async getLastGPResultsFromMdsParis() {
+    const res = await axios.get('https://f1-api.demo.mds-paris.yt/api/gp/latest');
+    return res.data;
+  }
+
+  /**
+   * Récupère les résultats d'un GP par date (format YYYY-MM-DD)
+   */
+  async getGPResultsByDate(date: string) {
+    const res = await axios.get(`https://f1-api.demo.mds-paris.yt/api/gp/date?date=${date}`);
+    return res.data;
+  }
+
+  /**
+   * Récupère la liste des dates de tous les GP disponibles
+   */
+  async getGPDates() {
+    const res = await axios.get('https://f1-api.demo.mds-paris.yt/api/gp/dates');
+    return res.data;
   }
 
   // Récupérer les informations des pilotes
@@ -27,7 +52,6 @@ export class F1Service {
     try {
       const currentYear = new Date().getFullYear();
       const response = await axios.get(`${this.baseUrl}/drivers?year=${currentYear}`);
-      
       // Transforme les données pour correspondre à notre modèle
       return response.data.map((driver: any) => ({
         driverId: driver.driver_number.toString(),

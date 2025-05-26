@@ -1,13 +1,5 @@
-import { GraphQLObjectType, GraphQLID, GraphQLString } from 'graphql';
-// import { EcurieType } from './ecurie.types';
 
-export const DriverType = new GraphQLObjectType({
-  name: 'Driver',
-  fields: () => ({
-    id: { type: GraphQLID },
-    name: { type: GraphQLString },
-    picture: { type: GraphQLString },
-    trigram: { type: GraphQLString },
-    // ecurie: { type: EcurieType },
-  })
-});
+// Le type DriverType est maintenant défini dans f1.types.ts pour éviter les conflits de nom GraphQL.
+// Importez-le via :
+// import { DriverType } from './f1.types';
+

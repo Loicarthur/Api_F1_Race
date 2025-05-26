@@ -1,4 +1,5 @@
 import { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLInt, GraphQLList, GraphQLFloat } from 'graphql';
+import { GPClassementType } from './gp-classement.types';
 
 // Types de base
 export const AvatarType = new GraphQLObjectType({
@@ -25,16 +26,16 @@ export const TrackType = new GraphQLObjectType({
 let DriverType: GraphQLObjectType;
 let EcurieType: GraphQLObjectType;
 let DriverEcurieType: GraphQLObjectType;
-let GPType: GraphQLObjectType;
+
 let GPDriverType: GraphQLObjectType;
 
 
 // Initialisation des types avec leurs champs
 DriverType = new GraphQLObjectType({
-  name: 'Pilote',
+  name: 'Driver',
   fields: () => ({
     id: { type: GraphQLID },
-    idApiPilote: { type: GraphQLInt },
+    idApiDriver: { type: GraphQLInt },
     name: { type: GraphQLString },
     pictureUrl: { type: GraphQLString },
     nameAcronym: { type: GraphQLString },
@@ -65,7 +66,7 @@ DriverEcurieType = new GraphQLObjectType({
 });
 
 GPDriverType = new GraphQLObjectType({
-  name: 'GPPilote',
+  name: 'GPDriver',
   fields: () => ({
     id: { type: GraphQLID },
     gp: { type: GPType },
@@ -74,17 +75,19 @@ GPDriverType = new GraphQLObjectType({
   })
 });
 
-GPType = new GraphQLObjectType({
-  name: 'GP',
-  fields: () => ({
-    id: { type: GraphQLInt },
-    name: { type: GraphQLString },
-    round: { type: GraphQLInt },
-    track: { type: TrackType },
-    dateTime: { type: GraphQLString },
-    drivers: { type: new GraphQLList(DriverType) },
-    classement: { type: new GraphQLList(require('./gp-classement.types').GPClassementType) }
-  })
+
+
+// Définition du type MainRaceResultType
+export const MainRaceResultType = new GraphQLObjectType({
+  name: 'MainRaceResult',
+  fields: {
+    position: { type: GraphQLInt },
+    driverName: { type: GraphQLString },
+    driverCode: { type: GraphQLString },
+    team: { type: GraphQLString },
+    time: { type: GraphQLString },
+    points: { type: GraphQLInt }
+  }
 });
 
 // Types pour les données en temps réel
@@ -128,5 +131,23 @@ export const TrackStatusType = new GraphQLObjectType({
   }
 });
 
+// Définition du type GP (Grand Prix)
+export const GPType: GraphQLObjectType = new GraphQLObjectType({
+  name: 'GP',
+  fields: (): import('graphql').GraphQLFieldConfigMap<any, any> => ({
+    id: { type: GraphQLID },
+    name: { type: GraphQLString },
+    round: { type: GraphQLInt },
+    track: { type: TrackType },
+    dateTime: { type: GraphQLString },
+    drivers: { type: new GraphQLList(DriverType) },
+    classement: { type: new GraphQLList(GPClassementType) },
+    mainRaceResults: { type: new GraphQLList(MainRaceResultType) }, // optionnel selon ton modèle
+    sessionType: { type: GraphQLString }, // optionnel
+    flag: { type: GraphQLString }         // optionnel
+  })
+});
+
 // Export des types
-export { DriverType, EcurieType, DriverEcurieType, GPType, GPDriverType };
+export { DriverType, EcurieType, DriverEcurieType, GPDriverType };
+// GPType est déjà exporté explicitement plus haut

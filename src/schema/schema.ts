@@ -10,15 +10,15 @@ import {
 } from "graphql";
 import { register, login, getAllUsers } from "../resolvers/auth.resolver";
 import { F1Resolver } from "../resolvers/f1.resolver";
-import { F1HistoryResolver } from "../resolvers/f1-history.resolver";
+
 import { CarDataType, LapTimeType, TrackStatusType } from "./types/f1.types";
-import { RaceHistoryType } from "./types/race-history";
+
 import { AuthResponseType, UserType } from "./types/auth.types";
 import { MyContext } from "../types/MyContext";
 import { leagueResolvers } from "../resolvers/league.resolver";
 import { gpClassementResolvers } from '../resolvers/gp-classement.resolver';
-import { f1ResultsResolvers } from '../resolvers/f1-results.resolver';
-import { F1GrandPrixType, DriverStatsType, StandingEntryType } from './types/f1-results.types';
+
+
 
 import { GPClassementType } from "./types/gp-classement.types";
 
@@ -32,7 +32,7 @@ import {
 } from "./types/league.types";
 
 const f1Resolver = new F1Resolver();
-const f1HistoryResolver = new F1HistoryResolver();
+
 
 // Input types
 const RegisterInputType = new GraphQLInputObjectType({
@@ -109,20 +109,6 @@ const RootQuery = new GraphQLObjectType({
       type: new GraphQLList(UserType),
       resolve: getAllUsers,
     },
-    getPastRaces: {
-      type: new GraphQLList(RaceHistoryType),
-      args: {
-        season: { type: GraphQLInt },
-      },
-      resolve: f1HistoryResolver.getPastRaceResults,
-    },
-    getRaceDetails: {
-      type: RaceHistoryType,
-      args: {
-        raceId: { type: GraphQLInt },
-      },
-      resolve: f1HistoryResolver.getRaceDetails,
-    },
     getAllLeagues: {
       type: new GraphQLList(LeagueType),
       resolve: leagueResolvers.Query.leagues,
@@ -145,8 +131,6 @@ const RootQuery = new GraphQLObjectType({
       },
       resolve: gpClassementResolvers.Query.userClassements,
     },
-    
-    
     publicLeagues: {
       type: PublicLeaguesResponseType,
       resolve: leagueResolvers.Query.publicLeagues,
@@ -167,7 +151,7 @@ const RootQuery = new GraphQLObjectType({
       },
     },
     leagueByJoinCode: {
-      type: LeagueByJoinCodeResponseType, // Utilise le type personnalisé
+      type: LeagueByJoinCodeResponseType, 
       args: {
         input: { type: new GraphQLNonNull(GetLeagueByJoinCodeInputType) },
       },
@@ -176,9 +160,9 @@ const RootQuery = new GraphQLObjectType({
       },
     },
     getMembersOfLeague: {
-      type: GetMembersOfLeagueResponseType, // Utilise le type personnalisé
+      type: GetMembersOfLeagueResponseType, 
       args: {
-        leagueId: { type: new GraphQLNonNull(GraphQLString) }, // Utilise le type personnalisé
+        leagueId: { type: new GraphQLNonNull(GraphQLString) }, 
       },
       resolve: async (
         _: unknown,
@@ -264,62 +248,12 @@ const RootQuery = new GraphQLObjectType({
       },
       resolve: f1Resolver.getSessionDetails,
     },
-    f1Results: {
-      type: new GraphQLList(F1GrandPrixType),
-      resolve: f1ResultsResolvers.Query.f1Results
-    },
-    f1GpResults: {
-      type: F1GrandPrixType,
-      args: {
-        gpId: { type: new GraphQLNonNull(GraphQLString) }
-      },
-      resolve: f1ResultsResolvers.Query.f1GpResults
-    },
-    f1SeasonResults: {
-      type: new GraphQLList(F1GrandPrixType),
-      args: {
-        season: { type: new GraphQLNonNull(GraphQLInt) }
-      },
-      resolve: f1ResultsResolvers.Query.f1SeasonResults
-    },
-    f1LatestResult: {
-      type: F1GrandPrixType,
-      resolve: f1ResultsResolvers.Query.f1LatestResult
-    },
-    f1Calendar: {
-      type: new GraphQLList(F1GrandPrixType),
-      args: {
-        season: { type: GraphQLInt }
-      },
-      resolve: f1ResultsResolvers.Query.f1Calendar
-    },
-    f1DriverStats: {
-      type: DriverStatsType,
-      args: {
-        driverId: { type: new GraphQLNonNull(GraphQLString) }
-      },
-      resolve: f1ResultsResolvers.Query.f1DriverStats
-    },
-    f1DriverStandings: {
-      type: new GraphQLList(StandingEntryType),
-      args: {
-        season: { type: GraphQLInt }
-      },
-      resolve: f1ResultsResolvers.Query.f1DriverStandings
-    },
-    f1ConstructorStandings: {
-      type: new GraphQLList(StandingEntryType),
-      args: {
-        season: { type: GraphQLInt }
-      },
-      resolve: f1ResultsResolvers.Query.f1ConstructorStandings
-    },
   }),
 });
 
 // Root Mutation
 const RootMutation = new GraphQLObjectType<unknown, MyContext>({
-  name: "RootMutation",
+  name: "RootMutationType",
   fields: () => ({
     register: {
       type: AuthResponseType,
@@ -376,22 +310,17 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
     createGpClassement: {
       type: GPClassementType,
       args: {
-        gpId: { type: new GraphQLNonNull(GraphQLString) }
+        gpId: { type: new GraphQLNonNull(GraphQLString) },
       },
       resolve: gpClassementResolvers.Mutation.createGPClassement,
     },
     updateGpClassementResult: {
       type: GPClassementType,
       args: {
-        gpId: { type: new GraphQLNonNull(GraphQLString) }
+        gpId: { type: new GraphQLNonNull(GraphQLString) },
       },
       resolve: gpClassementResolvers.Mutation.updateGPClassementResult,
     },
-
-    // Tracks Bet mutations
-    
-    
-
     addUserToLeague: {
       type: LeagueResponseType,
       args: {
@@ -416,6 +345,7 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
         );
       },
     },
+
   }),
 });
 
