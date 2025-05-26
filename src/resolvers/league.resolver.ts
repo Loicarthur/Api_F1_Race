@@ -246,6 +246,40 @@ export const leaveLeague: GraphQLFieldResolver<unknown, MyContext, { input: { le
   }
 };
 
+import { BetModel } from '../models/Bet';
+
+export const calculateLeagueRanking = async (
+  _: unknown,
+  { leagueId }: { leagueId: string }
+) => {
+  try {
+    const bets = await BetModel.find({ leagueId }).populate('userId');
+
+    const ranking = bets.reduce((acc: any, bet: any) => {
+      const userId = bet.userId._id.toString();
+      if (!acc[userId]) {
+        acc[userId] = {
+          userId: bet.userId._id,
+          username: bet.userId.username,
+          totalPoints: 0,
+        };
+      }
+      acc[userId].totalPoints += bet.points;
+      return acc;
+    }, {});
+
+    // Convertir l'objet en tableau et trier par points décroissants
+    const sortedRanking = Object.values(ranking).sort(
+      (a: any, b: any) => b.totalPoints - a.totalPoints
+    );
+
+    return sortedRanking;
+  } catch (error) {
+    console.error('Error in calculateLeagueRanking:', error);
+    throw new Error('Failed to calculate league ranking');
+  }
+};
+
 // Export your resolvers
 export const leagueResolvers = {
   Query: {

@@ -170,5 +170,3 @@ const POINTS_SYSTEM: { [position: string]: number } = {
   P20: 1,
 };
 
-const BONUS_POINTS_DNF = 10; 
-

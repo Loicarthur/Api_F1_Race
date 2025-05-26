@@ -1,6 +1,7 @@
 import { GraphQLFieldResolver } from 'graphql';
 import Driver from '../models/Driver';
 import { MyContext } from '../types/MyContext';
+import fetchAndUpdateDrivers from '../services/driver.service';
 
 export class DriverResolver {
   // Query: récupérer tous les pilotes
@@ -33,6 +34,16 @@ export class DriverResolver {
     return await Driver.findByIdAndDelete(id);
   };
 
+  // Mutation: synchroniser les pilotes depuis l'API externe
+  syncDrivers: GraphQLFieldResolver<any, MyContext> = async (_, __, _context) => {
+    try {
+      await fetchAndUpdateDrivers(); // Appelle la fonction pour récupérer et insérer les données
+      return { success: true, message: 'Drivers synchronized successfully!' };
+    } catch (error) {
+      console.error('Error synchronizing drivers:', error);
+      return { success: false, message: 'Failed to synchronize drivers.' };
+    }
+  };
 }
 
 export const driverResolvers = {
@@ -43,5 +54,6 @@ export const driverResolvers = {
   Mutation: {
     createDriver: new DriverResolver().createDriver,
     deleteDriver: new DriverResolver().deleteDriver,
-  }
+    syncDrivers: new DriverResolver().syncDrivers, // Ajout de la mutation syncDrivers
+  },
 };

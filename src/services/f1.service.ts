@@ -2,6 +2,9 @@
 import axios from 'axios';
 
 export class F1Service {
+  getDriversFromApi() {
+    throw new Error('Method not implemented.');
+  }
   private readonly baseUrl: string;
 
   constructor() {
@@ -30,64 +33,6 @@ export class F1Service {
   async getGPDates() {
     const res = await axios.get('https://f1-api.demo.mds-paris.yt/api/gp/dates');
     return res.data;
-  }
-
-  // Récupérer les informations des pilotes
-  async getDrivers(session_key?: number) {
-    try {
-      let url = `${this.baseUrl}/drivers`;
-      if (session_key) {
-        url += `?session_key=${session_key}`;
-      }
-      const response = await axios.get(url);
-      return response.data;
-    } catch (error) {
-      console.error('Erreur lors de la récupération des pilotes:', error);
-      throw error;
-    }
-  }
-
-  // Récupérer les pilotes actuels de la saison
-  async getCurrentDrivers() {
-    try {
-      const currentYear = new Date().getFullYear();
-      const response = await axios.get(`${this.baseUrl}/drivers?year=${currentYear}`);
-      // Transforme les données pour correspondre à notre modèle
-      return response.data.map((driver: any) => ({
-        driverId: driver.driver_number.toString(),
-        code: driver.driver_code,
-        firstName: driver.first_name,
-        lastName: driver.last_name,
-        dateOfBirth: driver.date_of_birth,
-        nationality: driver.nationality,
-        team: driver.team_name
-      }));
-    } catch (error) {
-      console.error('Erreur lors de la récupération des pilotes actuels:', error);
-      throw error;
-    }
-  }
-
-  // Récupérer les informations de la session
-  async getSessions(year?: number, round?: number, session_type?: string) {
-    try {
-      let url = `${this.baseUrl}/sessions`;
-      const params = [];
-      
-      if (year) params.push(`year=${year}`);
-      if (round) params.push(`round=${round}`);
-      if (session_type) params.push(`session_type=${session_type}`);
-      
-      if (params.length > 0) {
-        url += '?' + params.join('&');
-      }
-
-      const response = await axios.get(url);
-      return response.data;
-    } catch (error) {
-      console.error('Erreur lors de la récupération des sessions:', error);
-      throw error;
-    }
   }
 
   // Récupérer les temps au tour

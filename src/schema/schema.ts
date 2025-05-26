@@ -31,6 +31,8 @@ import {
   LeagueByJoinCodeResponseType,
 } from "./types/league.types";
 import { getEcuries, getEcurieById } from '../resolvers/ecurie.resolver';
+import { assignPointsToBet, createBet, getBetById, updateBet} from "../resolvers/bet.resolver";
+import { driverResolvers } from "../resolvers/driver.resolver";
 
 const f1Resolver = new F1Resolver();
 
@@ -123,6 +125,47 @@ export const CreateEcurieInputType = new GraphQLInputObjectType({
   },
 });
 
+
+const BetType = new GraphQLObjectType({
+  name: "Bet",
+  fields: {
+    id: { type: GraphQLString },
+    userId: { type: GraphQLString },
+    gpId: { type: GraphQLString },
+    driverId: { type: GraphQLString },
+    leagueId: { type: GraphQLString },
+    points: { type: GraphQLInt },
+  },
+});
+
+const UpdateBetInputType = new GraphQLInputObjectType({
+  name: "UpdateBetInput",
+  fields: {
+    gpId: { type: GraphQLString },
+    driverId: { type: GraphQLString },
+    leagueId: { type: GraphQLString },
+    points: { type: GraphQLInt },
+  },
+});
+
+const CreateBetInputType = new GraphQLInputObjectType({
+  name: "CreateBetInput",
+  fields: {
+    userId: { type: new GraphQLNonNull(GraphQLString) },
+    gpId: { type: new GraphQLNonNull(GraphQLString) },
+    driverId: { type: new GraphQLNonNull(GraphQLString) },
+    leagueId: { type: new GraphQLNonNull(GraphQLString) },
+    points: { type: GraphQLInt }, // Optionnel, par défaut à 0
+  },
+});
+
+const SyncDriversResponseType = new GraphQLObjectType({
+  name: 'SyncDriversResponse',
+  fields: {
+    success: { type: GraphQLBoolean },
+    message: { type: GraphQLString },
+  },
+});
 // Root Query
 const RootQuery = new GraphQLObjectType({
   name: "RootQueryType",
@@ -224,52 +267,7 @@ const RootQuery = new GraphQLObjectType({
       },
       resolve: f1Resolver.getTrackStatus,
     },
-    sessions: {
-      type: new GraphQLList(
-        new GraphQLObjectType({
-          name: "Session",
-          fields: {
-            session_key: { type: GraphQLInt },
-            meeting_key: { type: GraphQLInt },
-            session_name: { type: GraphQLString },
-            session_type: { type: GraphQLString },
-            session_date: { type: GraphQLString },
-          },
-        })
-      ),
-      args: {
-        year: { type: GraphQLInt },
-        round: { type: GraphQLInt },
-        session_type: { type: GraphQLString },
-      },
-      resolve: f1Resolver.getSessions,
-    },
-    sessionDetails: {
-      type: new GraphQLObjectType({
-        name: "SessionDetails",
-        fields: {
-          drivers: {
-            type: new GraphQLList(
-              new GraphQLObjectType({
-                name: "Driver",
-                fields: {
-                  driver_number: { type: GraphQLInt },
-                  name: { type: GraphQLString },
-                  team: { type: GraphQLString },
-                },
-              })
-            ),
-          },
-          lapTimes: { type: new GraphQLList(LapTimeType) },
-          trackStatus: { type: TrackStatusType },
-          carData: { type: new GraphQLList(CarDataType) },
-        },
-      }),
-      args: {
-        session_key: { type: GraphQLInt },
-      },
-      resolve: f1Resolver.getSessionDetails,
-    },
+    
     getEcuries: {
       type: new GraphQLList(EcurieType),
       resolve: getEcuries,
@@ -282,6 +280,20 @@ const RootQuery = new GraphQLObjectType({
       resolve: async (_: unknown, args: { [key: string]: any }) => {
         const { id } = args as { id: string };
         return getEcurieById(_, { id });
+      },
+    },
+    getBetById: {
+      type: BetType,
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      resolve: async (
+        _: unknown,
+        args: { [key: string]: any },
+        context: MyContext
+      ) => {
+        const { id } = args as { id: string };
+        return getBetById(_, { id }, context);
       },
     },
   }),
@@ -314,7 +326,7 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
       resolve: leagueResolvers.Mutation.createLeague,
     },
     deleteLeague: {
-      type: DeleteLeagueResponseType, // Utilise le type personnalisé
+      type: DeleteLeagueResponseType,
       args: {
         input: { type: new GraphQLNonNull(DeleteLeagueInputType) },
       },
@@ -381,6 +393,48 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
           info
         );
       },
+      
+    },
+    createBet: {
+      type: BetType,
+      args: {
+        input: { type: new GraphQLNonNull(CreateBetInputType) },
+      },
+      resolve: createBet,
+    },
+    updateBet: {
+      type: BetType,
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+        input: { type: new GraphQLNonNull(UpdateBetInputType) },
+      },
+      resolve: async (
+        _: unknown,
+        args: { [argName: string]: any },
+        context: MyContext
+      ) => {
+        const { id, input } = args as { id: string; input: { driverId?: string; points?: number } };
+        return updateBet(_, { id, input }, context);
+      },
+    },
+    assignPointsToBet: {
+      type: BetType,
+      args: {
+        betId: { type: new GraphQLNonNull(GraphQLString) },
+        position: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      resolve: async (
+        _: unknown,
+        args: { [key: string]: any },
+        context: MyContext
+      ) => {
+        const { betId, position } = args as { betId: string; position: string };
+        return assignPointsToBet(_, { betId, position }, context);
+      },
+    },
+    syncDrivers: {
+      type: SyncDriversResponseType,
+      resolve: driverResolvers.Mutation.syncDrivers, // Appelle la mutation syncDrivers
     },
   }),
 });

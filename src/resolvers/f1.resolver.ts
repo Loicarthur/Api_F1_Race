@@ -98,36 +98,6 @@ export class F1Resolver {
     }
   };
 
-  // Récupérer les informations de session
-  getSessions: GraphQLFieldResolver<any, any> = async (_, { year, round, session_type }) => {
-    try {
-      const sessions = await this.f1Service.getSessions(year, round, session_type);
-      return sessions;
-    } catch (error) {
-      console.error('Erreur lors de la récupération des sessions:', error);
-      throw error;
-    }
-  };
-
-  // Récupérer les détails d'une session spécifique
-  getSessionDetails: GraphQLFieldResolver<any, any> = async (_, { session_key }) => {
-    try {
-      const [drivers, lapTimes, trackStatus, carData] = await Promise.all([
-        this.f1Service.getDrivers(session_key),
-        this.f1Service.getLapTimes(session_key),
-        this.f1Service.getTrackStatus(session_key),
-        this.f1Service.getCarData(session_key)
-      ]);
-
-      return {
-        drivers,
-        lapTimes,
-        trackStatus,
-        carData
-      };
-    } catch (error) {
-      console.error('Erreur lors de la récupération des détails de la session:', error);
-      throw error;
-    }
-  };
 }
+
+    
