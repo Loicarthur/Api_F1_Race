@@ -7,6 +7,7 @@ import {
   GraphQLNonNull,
   GraphQLInputObjectType,
   GraphQLBoolean,
+  GraphQLID,
 } from "graphql";
 import { register, login, getAllUsers } from "../resolvers/auth.resolver";
 import { F1Resolver } from "../resolvers/f1.resolver";
@@ -33,6 +34,7 @@ import {
 import { getEcuries, getEcurieById } from '../resolvers/ecurie.resolver';
 import { assignPointsToBet, createBet, getBetById, updateBet} from "../resolvers/bet.resolver";
 import fetchAndUpdateDriversAndEcuries from "../services/driver.service";
+import Driver from "../models/Driver";
 
 const f1Resolver = new F1Resolver();
 
@@ -122,6 +124,7 @@ export const EcurieType = new GraphQLObjectType({
   },
 });
 
+
 export const CreateEcurieInputType = new GraphQLInputObjectType({
   name: 'CreateEcurieInput',
   fields: {
@@ -131,6 +134,7 @@ export const CreateEcurieInputType = new GraphQLInputObjectType({
     drivers: { type: new GraphQLList(GraphQLString) }, // Liste des IDs des pilotes
   },
 });
+
 
 
 const BetType = new GraphQLObjectType({
@@ -163,6 +167,17 @@ const CreateBetInputType = new GraphQLInputObjectType({
     driverId: { type: new GraphQLNonNull(GraphQLString) },
     leagueId: { type: new GraphQLNonNull(GraphQLString) },
     points: { type: GraphQLInt }, // Optionnel, par défaut à 0
+  },
+});
+
+const DriverType = new GraphQLObjectType({
+  name: "Driver",
+  fields: {
+    id: { type: GraphQLID },
+    name: { type: GraphQLString },
+    picture: { type: GraphQLString },
+    trigram: { type: GraphQLString },
+    ecurie: { type: EcurieType }, // Inclure les informations de l'écurie
   },
 });
 
@@ -294,6 +309,17 @@ const RootQuery = new GraphQLObjectType({
       ) => {
         const { id } = args as { id: string };
         return getBetById(_, { id }, context);
+      },
+
+    },
+    driver: {
+      type: DriverType,
+      args: { id: { type: GraphQLID } }, // Argument pour spécifier l'ID du pilote
+      resolve: async (_, { id }) => {
+        return await Driver.findById(id).populate({
+          path: "ecurie", // Inclure les informations de l'écurie
+          select: "name logoUrl color", // Sélectionner uniquement les champs nécessaires
+        });
       },
     },
   }),

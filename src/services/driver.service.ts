@@ -4,45 +4,31 @@ import { EcurieModel } from "../models/Ecurie";
 
 const fetchAndUpdateDriversAndEcuries = async () => {
   try {
-    // Étape 1 : Récupérer les données générales des pilotes depuis l'API externe
-    const response = await axios.get("https://api.openf1.org/v1/drivers");
+    const response = await axios.get("https://api.openf1.org/v1/drivers?session_key=latest");
     const driversFromApi = response.data;
 
     const ecuriesMap: { [key: string]: any } = {};
 
-    // Étape 2 : Récupérer les détails de chaque pilote avec `driver_number` et `session_key`
-    const driversToInsert = await Promise.all(
-      driversFromApi.map(async (driver: any) => {
-        // Construire l'URL pour récupérer les détails du pilote
-        const driverDetailsResponse = await axios.get(
-          `https://api.openf1.org/v1/drivers?driver_number=${driver.driver_number}&session_key=latest`
-        );
-        const driverDetails = driverDetailsResponse.data;
-
-        // Ajouter les informations de l'écurie dans le map
-        if (driver.team_name) {
-          if (!ecuriesMap[driver.team_name]) {
-            ecuriesMap[driver.team_name] = {
-              name: driver.team_name,
-              logoUrl: driver.team_logo_url,
-              color: driver.team_colour,
-              drivers: [],
-            };
-          }
-          ecuriesMap[driver.team_name].drivers.push(driver.name_acronym);
+    const driversToInsert = driversFromApi.map((driver: any) => {
+      if (driver.team_name) {
+        if (!ecuriesMap[driver.team_name]) {
+          ecuriesMap[driver.team_name] = {
+            name: driver.team_name,
+            logoUrl: driver.team_logo_url,
+            color: driver.team_colour,
+            drivers: [],
+          };
         }
+        ecuriesMap[driver.team_name].drivers.push(driver.name_acronym);
+      }
 
-        // Retourner les données du pilote
-        return {
-          name: driverDetails.full_name || driver.full_name,
-          picture: driverDetails.headshot_url || driver.headshot_url,
-          trigram: driverDetails.name_acronym || driver.name_acronym,
-          driver_number: driver.driver_number,
-        };
-      })
-    );
+      return {
+        name: driver.full_name,
+        picture: driver.headshot_url,
+        trigram: driver.name_acronym,
+      };
+    });
 
-    // Étape 3 : Insérer ou mettre à jour les écuries dans MongoDB
     for (const ecurieName in ecuriesMap) {
       const ecurie = ecuriesMap[ecurieName];
       const savedEcurie = await EcurieModel.findOneAndUpdate(
@@ -58,7 +44,6 @@ const fetchAndUpdateDriversAndEcuries = async () => {
       ecuriesMap[ecurieName].id = savedEcurie._id;
     }
 
-    // Étape 4 : Insérer ou mettre à jour les pilotes dans MongoDB
     for (const driver of driversToInsert) {
       const ecurieId = Object.values(ecuriesMap).find((ecurie: any) =>
         ecurie.drivers.includes(driver.trigram)
@@ -73,7 +58,7 @@ const fetchAndUpdateDriversAndEcuries = async () => {
 
         await EcurieModel.findByIdAndUpdate(
           ecurieId,
-          { $addToSet: { drivers: savedDriver._id } }, // Ajoute le pilote à la liste des pilotes de l'écurie
+          { $addToSet: { drivers: savedDriver._id } },
           { new: true }
         );
       }
@@ -84,5 +69,4 @@ const fetchAndUpdateDriversAndEcuries = async () => {
     console.error("Error fetching or updating drivers and ecuries:", error);
   }
 };
-
 export default fetchAndUpdateDriversAndEcuries;

@@ -9,7 +9,6 @@ export interface IEcurie extends Document {
 
 const EcurieSchema = new Schema<IEcurie>({
   name: { type: String, required: true },
-  logoUrl: { type: String },
   color: { type: String },
   drivers: [{ type: Schema.Types.ObjectId, ref: 'Driver' }], // Références aux pilotes
 });

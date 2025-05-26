@@ -4,14 +4,20 @@ import { MyContext } from '../types/MyContext';
 import fetchAndUpdateDrivers from '../services/driver.service';
 
 export class DriverResolver {
-  // Query: récupérer tous les pilotes
+  // Query: récupérer tous les pilotes avec leur écurie (sans logoUrl)
   getDrivers: GraphQLFieldResolver<any, MyContext> = async () => {
-    return await Driver.find().populate('ecurie');
+    return await Driver.find().populate({
+      path: 'ecurie', // Inclure les informations de l'écurie
+      select: 'name color', // Retirer le champ logoUrl
+    });
   };
 
-  // Query: récupérer un pilote par son id
+  // Query: récupérer un pilote par son id avec son écurie (sans logoUrl)
   getDriver: GraphQLFieldResolver<any, MyContext> = async (_, { id }) => {
-    return await Driver.findById(id).populate('ecurie');
+    return await Driver.findById(id).populate({
+      path: 'ecurie', // Inclure les informations de l'écurie
+      select: 'name color', // Retirer le champ logoUrl
+    });
   };
 
   // Mutation: synchroniser les pilotes depuis l'API externe

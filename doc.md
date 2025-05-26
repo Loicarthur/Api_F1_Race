@@ -170,3 +170,12 @@ const POINTS_SYSTEM: { [position: string]: number } = {
   P20: 1,
 };
 
+
+//pousser les drivers et les écuries dans la bdd
+mutation {
+   syncDriversAndEcuries {
+    success
+    message
+  }
+}
+
