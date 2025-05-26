@@ -25,6 +25,7 @@ import {
   LeagueByJoinCodeResponseType,
 } from "./types/league.types";
 import { LeagueModel } from '../models/League';
+import { getEcuries, getEcurieById, createEcurie } from '../resolvers/ecurie.resolver';
 
 const f1Resolver = new F1Resolver();
 const f1HistoryResolver = new F1HistoryResolver();
@@ -175,6 +176,27 @@ const MutationResponseType = new GraphQLObjectType({
   fields: {
     success: { type: GraphQLBoolean },
     message: { type: GraphQLString },
+  },
+});
+
+export const EcurieType = new GraphQLObjectType({
+  name: 'Ecurie',
+  fields: {
+    id: { type: GraphQLString },
+    name: { type: GraphQLString },
+    logoUrl: { type: GraphQLString },
+    color: { type: GraphQLString },
+    drivers: { type: new GraphQLList(GraphQLString) }, // Liste des IDs des pilotes
+  },
+});
+
+export const CreateEcurieInputType = new GraphQLInputObjectType({
+  name: 'CreateEcurieInput',
+  fields: {
+    name: { type: GraphQLString },
+    logoUrl: { type: GraphQLString },
+    color: { type: GraphQLString },
+    drivers: { type: new GraphQLList(GraphQLString) }, // Liste des IDs des pilotes
   },
 });
 
@@ -335,6 +357,20 @@ const RootQuery = new GraphQLObjectType({
         };
       },
     },
+    getEcuries: {
+      type: new GraphQLList(EcurieType),
+      resolve: getEcuries,
+    },
+    getEcurieById: {
+      type: EcurieType,
+      args: {
+        id: { type: new GraphQLNonNull(GraphQLString) },
+      },
+      resolve: async (_: unknown, args: { [key: string]: any }) => {
+        const { id } = args as { id: string };
+        return getEcurieById(_, { id });
+      },
+    },
   }),
 });
 
@@ -475,7 +511,13 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
         );
       },
     },
-    
+    createEcurie: {
+      type: EcurieType,
+      args: {
+        input: { type: new GraphQLNonNull(CreateEcurieInputType) },
+      },
+      resolve: createEcurie, // Appelle directement le resolver corrigé
+    },
   }),
 });
 
