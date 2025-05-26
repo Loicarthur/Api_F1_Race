@@ -14,30 +14,10 @@ export class DriverResolver {
     return await Driver.findById(id).populate('ecurie');
   };
 
-  // Mutation: créer un pilote
-  createDriver: GraphQLFieldResolver<any, MyContext> = async (_, { input }, context) => {
-    // Vérifie que l'utilisateur est admin
-    if (!context.user || context.user.role !== 'admin') {
-      throw new Error('Access denied. Admin role required.');
-    }
-    const driver = new Driver(input);
-    await driver.save();
-    return driver;
-  };
-
-  // Mutation: supprimer un pilote
-  deleteDriver: GraphQLFieldResolver<any, MyContext> = async (_, { id }, context) => {
-    // Vérifie que l'utilisateur est admin
-    if (!context.user || context.user.role !== 'admin') {
-      throw new Error('Access denied. Admin role required.');
-    }
-    return await Driver.findByIdAndDelete(id);
-  };
-
   // Mutation: synchroniser les pilotes depuis l'API externe
   syncDrivers: GraphQLFieldResolver<any, MyContext> = async (_, __, _context) => {
     try {
-      await fetchAndUpdateDrivers(); // Appelle la fonction pour récupérer et insérer les données
+      await fetchAndUpdateDrivers(); 
       return { success: true, message: 'Drivers synchronized successfully!' };
     } catch (error) {
       console.error('Error synchronizing drivers:', error);
@@ -52,8 +32,6 @@ export const driverResolvers = {
     driver: new DriverResolver().getDriver,
   },
   Mutation: {
-    createDriver: new DriverResolver().createDriver,
-    deleteDriver: new DriverResolver().deleteDriver,
-    syncDrivers: new DriverResolver().syncDrivers, // Ajout de la mutation syncDrivers
+    syncDrivers: new DriverResolver().syncDrivers,
   },
 };

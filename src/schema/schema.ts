@@ -32,12 +32,19 @@ import {
 } from "./types/league.types";
 import { getEcuries, getEcurieById } from '../resolvers/ecurie.resolver';
 import { assignPointsToBet, createBet, getBetById, updateBet} from "../resolvers/bet.resolver";
-import { driverResolvers } from "../resolvers/driver.resolver";
+import fetchAndUpdateDriversAndEcuries from "../services/driver.service";
 
 const f1Resolver = new F1Resolver();
 
 
-// Input types
+// Input type
+const SyncResponseType = new GraphQLObjectType({
+  name: "SyncResponse",
+  fields: {
+    success: { type: GraphQLBoolean },
+    message: { type: GraphQLString },
+  },
+});
 const RegisterInputType = new GraphQLInputObjectType({
   name: "RegisterInput",
   fields: () => ({
@@ -159,13 +166,6 @@ const CreateBetInputType = new GraphQLInputObjectType({
   },
 });
 
-const SyncDriversResponseType = new GraphQLObjectType({
-  name: 'SyncDriversResponse',
-  fields: {
-    success: { type: GraphQLBoolean },
-    message: { type: GraphQLString },
-  },
-});
 // Root Query
 const RootQuery = new GraphQLObjectType({
   name: "RootQueryType",
@@ -432,9 +432,17 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
         return assignPointsToBet(_, { betId, position }, context);
       },
     },
-    syncDrivers: {
-      type: SyncDriversResponseType,
-      resolve: driverResolvers.Mutation.syncDrivers, // Appelle la mutation syncDrivers
+    syncDriversAndEcuries: {
+      type: SyncResponseType,
+      resolve: async () => {
+        try {
+          await fetchAndUpdateDriversAndEcuries(); // Appelle la fonction pour synchroniser les pilotes et les écuries
+          return { success: true, message: "Drivers and Ecuries synchronized successfully!" };
+        } catch (error) {
+          console.error("Error synchronizing drivers and ecuries:", error);
+          return { success: false, message: "Failed to synchronize drivers and ecuries." };
+        }
+      },
     },
   }),
 });
