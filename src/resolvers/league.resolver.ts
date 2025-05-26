@@ -14,6 +14,32 @@ function generateJoinCode(length: number): string {
   return result;
 }
 
+// Système de points pour les positions
+const POINTS_SYSTEM: { [position: string]: number } = {
+  P1: 1,
+  P2: 2,
+  P3: 4,
+  P4: 6,
+  P5: 8,
+  P6: 10,
+  P7: 12,
+  P8: 15,
+  P9: 18,
+  P10: 25,
+  P11: 18,
+  P12: 15,
+  P13: 12,
+  P14: 10,
+  P15: 8,
+  P16: 6,
+  P17: 4,
+  P18: 2,
+  P19: 1,
+  P20: 1,
+};
+
+const BONUS_POINTS_DNF = 10; 
+
 // Resolver pour créer une ligue
 export const createLeague: GraphQLFieldResolver<unknown, MyContext> = async (_, args) => {
   try {
@@ -219,6 +245,155 @@ export const getMembersOfLeague: GraphQLFieldResolver<unknown, MyContext, { leag
   }
 };
 
+// Resolver to leave a league
+export const leaveLeague: GraphQLFieldResolver<unknown, MyContext, { input: { leagueId: string; userId: string } }> = async (_, { input }) => {
+  const { leagueId, userId } = input;
+  try {
+    const league = await LeagueModel.findById(leagueId);
+    if (!league) {
+      throw new Error('League not found');
+    }
+
+    // Supprime l'utilisateur de la ligue
+    league.users = league.users.filter(user => user.id !== userId);
+    await league.save();
+
+    return {
+      success: true,
+      message: 'User successfully removed from the league',
+      httpStatus: 200,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'An unexpected error occurred',
+      httpStatus: 500,
+    };
+  }
+};
+
+export const submitPrediction: GraphQLFieldResolver<unknown, MyContext, { input: { leagueId: string; userId: string; predictedPosition: string; predictedDNF: string } }> = async (_, { input }) => {
+  const { leagueId, userId, predictedPosition, predictedDNF } = input;
+  try {
+    const league = await LeagueModel.findById(leagueId);
+    if (!league) {
+      throw new Error('League not found');
+    }
+
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Mettre à jour les prédictions de l'utilisateur
+    user.predictedPosition = predictedPosition;
+    user.predictedDNF = predictedDNF;
+    await user.save();
+
+    return {
+      success: true,
+      message: 'Prediction submitted successfully',
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'An unexpected error occurred',
+    };
+  }
+};
+
+export const calculateLeagueRanking: GraphQLFieldResolver<unknown, MyContext, { leagueId: string }> = async (_, { leagueId }) => {
+  try {
+    // Récupérer la ligue avec les utilisateurs associés
+    const league = await LeagueModel.findById(leagueId).populate('users.user');
+    if (!league) {
+      throw new Error('League not found');
+    }
+
+    // Vérifiez si la ligue contient des utilisateurs
+    if (!league.users || league.users.length === 0) {
+      return {
+        ranking: [],
+        httpStatus: 200,
+      };
+    }
+
+    // Construire le classement en fonction des utilisateurs de la ligue
+    const ranking = league.users.map(user => {
+      const predictedPosition = user.user?.predictedPosition || null;
+      const actualPosition = predictedPosition ? league.actualPositions?.[predictedPosition] : null;
+      const predictedDNF = user.user?.predictedDNF || null;
+      const actualDNF = league.actualDNF || null;
+
+      // Calcul des points pour la position
+      const positionPoints = actualPosition ? POINTS_SYSTEM[`P${predictedPosition}`] || 0 : 0;
+
+      // Ajouter des points bonus pour la prédiction correcte du premier DNF
+      const bonusPoints = predictedDNF === actualDNF ? BONUS_POINTS_DNF : 0;
+
+      // Total des points
+      const totalPoints = positionPoints + bonusPoints;
+
+      return {
+        id: user.user?.id || "Unknown",
+        username: user.user?.username || "Unknown",
+        totalPoints,
+        positionPoints,
+        bonusPoints,
+      };
+    });
+
+    // Trier le classement par points décroissants
+    ranking.sort((a, b) => b.totalPoints - a.totalPoints);
+
+    return {
+      ranking,
+      httpStatus: 200,
+    };
+  } catch (error) {
+    console.error("Error in calculateLeagueRanking:", error);
+    return {
+      ranking: null,
+      error: {
+        message: error instanceof Error ? error.message : 'An unexpected error occurred',
+        code: 'INTERNAL_SERVER_ERROR',
+        httpStatus: 500,
+      },
+    };
+  }
+};
+
+export const submitResults: GraphQLFieldResolver<
+  unknown,
+  MyContext,
+  { input: { leagueId: string; actualDNF: string; actualPositions: { [position: string]: string } } }
+> = async (_, { input }: { input: { leagueId: string; actualDNF: string; actualPositions: { [position: string]: string } } }) => {
+  const { leagueId, actualDNF, actualPositions } = input;
+
+  try {
+    // Vérifiez si la ligue existe
+    const league = await LeagueModel.findById(leagueId);
+    if (!league) {
+      throw new Error("League not found");
+    }
+
+    // Mettre à jour les résultats réels
+    league.actualDNF = actualDNF;
+    league.actualPositions = actualPositions;
+    await league.save();
+
+    return {
+      success: true,
+      message: "Results submitted successfully",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "An unexpected error occurred",
+    };
+  }
+};
+
 // Export your resolvers
 export const leagueResolvers = {
   Query: {
@@ -227,12 +402,17 @@ export const leagueResolvers = {
     leaguesByUserId: getLeaguesByUserId,
     leagueByJoinCode: getLeagueByJoinCode,
     getMembersOfLeague: getMembersOfLeague,
+    calculateLeagueRanking,
+    
   },
   Mutation: {
     createLeague,
     deleteLeague,
     modifyLeague,
     addUserToLeague,
+    leaveLeague,
+    submitPrediction,
+    submitResults,
   },
 };
 

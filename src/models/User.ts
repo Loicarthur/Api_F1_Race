@@ -33,7 +33,17 @@ const UserSchema = new Schema({
     type: String,
     enum: ['user', 'admin'],
     default: 'user'
-  }
+  },
+  predictedPosition: {
+    type: String,
+  },
+  predictedDNF: {
+    type: String,
+  },
+  totalPoints: {
+    type: Number,
+    default: 0,
+  },
 });
 
 // Hash le mot de passe avant de sauvegarder

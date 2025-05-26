@@ -89,7 +89,6 @@ query {
       id
       username
       email
-      admin
     }
     httpStatus
   }
@@ -112,4 +111,39 @@ query {
     httpStatus
   }
 }
+
+Quitter une ligue
+mutation {
+  leaveLeague(input: { leagueId: "id-league", userId: "id-user" }) {
+    success
+    message
+  }
+}
+
+Prédiction position et prediction DNF d'un joueur dans une ligue sur les pilotes
+mutation {
+  submitPrediction(input: { 
+    leagueId: "LEAGUE_ID", 
+    userId: "USER_ID", 
+    predictedPosition: "P1", 
+    predictedDNF: "Driver1" 
+  }) {
+    success
+    message
+  }
+}
+
+query {
+  calculateLeagueRanking(leagueId: "67fa644bf11f5b662b8adfd9") {
+    ranking {
+      id
+      username
+      totalPoints
+      positionPoints
+      bonusPoints
+    }
+    httpStatus
+  }
+}
+
 
