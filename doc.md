@@ -146,4 +146,29 @@ query {
   }
 }
 
+// Système de points pour les positions
+const POINTS_SYSTEM: { [position: string]: number } = {
+  P1: 1,
+  P2: 2,
+  P3: 4,
+  P4: 6,
+  P5: 8,
+  P6: 10,
+  P7: 12,
+  P8: 15,
+  P9: 18,
+  P10: 25,
+  P11: 18,
+  P12: 15,
+  P13: 12,
+  P14: 10,
+  P15: 8,
+  P16: 6,
+  P17: 4,
+  P18: 2,
+  P19: 1,
+  P20: 1,
+};
+
+const BONUS_POINTS_DNF = 10; 
 

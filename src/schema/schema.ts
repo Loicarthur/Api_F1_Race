@@ -30,8 +30,7 @@ import {
   PublicLeaguesResponseType,
   LeagueByJoinCodeResponseType,
 } from "./types/league.types";
-import { LeagueModel } from '../models/League';
-import { getEcuries, getEcurieById, createEcurie } from '../resolvers/ecurie.resolver';
+import { getEcuries, getEcurieById } from '../resolvers/ecurie.resolver';
 
 const f1Resolver = new F1Resolver();
 
@@ -101,88 +100,6 @@ const DeleteLeagueInputType = new GraphQLInputObjectType({
   fields: () => ({
     leagueId: { type: new GraphQLNonNull(GraphQLString) },
   }),
-});
-
-const SubmitPredictionInputType = new GraphQLInputObjectType({
-  name: "SubmitPredictionInput",
-  fields: () => ({
-    leagueId: { type: new GraphQLNonNull(GraphQLString) },
-    userId: { type: new GraphQLNonNull(GraphQLString) },
-    predictedPosition: { type: new GraphQLNonNull(GraphQLString) },
-    predictedDNF: { type: new GraphQLNonNull(GraphQLString) },
-  }),
-});
-
-const SubmitResultsInputType = new GraphQLInputObjectType({
-  name: "SubmitResultsInput",
-  fields: () => ({
-    leagueId: { type: new GraphQLNonNull(GraphQLString) },
-    actualDNF: { type: new GraphQLNonNull(GraphQLString) },
-    actualPositions: {
-      type: new GraphQLNonNull(
-        new GraphQLInputObjectType({
-          name: "ActualPositionsInput",
-          fields: {
-            P1: { type: GraphQLString },
-            P2: { type: GraphQLString },
-            P3: { type: GraphQLString },
-            P4: { type: GraphQLString },
-            P5: { type: GraphQLString },
-            P6: { type: GraphQLString },
-            P7: { type: GraphQLString },
-            P8: { type: GraphQLString },
-            P9: { type: GraphQLString },
-            P10: { type: GraphQLString },
-            P11: { type: GraphQLString },
-            P12: { type: GraphQLString },
-            P13: { type: GraphQLString },
-            P14: { type: GraphQLString },
-            P15: { type: GraphQLString },
-            P16: { type: GraphQLString },
-            P17: { type: GraphQLString },
-            P18: { type: GraphQLString },
-            P19: { type: GraphQLString },
-            P20: { type: GraphQLString },
-          },
-        })
-      ),
-    },
-  }),
-});
-
-const LeaveLeagueInputType = new GraphQLInputObjectType({
-  name: 'LeaveLeagueInput',
-  fields: {
-    leagueId: { type: new GraphQLNonNull(GraphQLString) },
-    userId: { type: new GraphQLNonNull(GraphQLString) },
-  },
-});
-
-const PlayerRankingType = new GraphQLObjectType({
-  name: "PlayerRanking",
-  fields: {
-    id: { type: GraphQLString },
-    username: { type: GraphQLString },
-    totalPoints: { type: GraphQLInt },
-    positionPoints: { type: GraphQLInt },
-    bonusPoints: { type: GraphQLInt },
-  },
-});
-
-const LeagueRankingResponseType = new GraphQLObjectType({
-  name: "LeagueRankingResponse",
-  fields: {
-    ranking: { type: new GraphQLList(PlayerRankingType) },
-    httpStatus: { type: GraphQLInt },
-  },
-});
-
-const MutationResponseType = new GraphQLObjectType({
-  name: "MutationResponse",
-  fields: {
-    success: { type: GraphQLBoolean },
-    message: { type: GraphQLString },
-  },
 });
 
 export const EcurieType = new GraphQLObjectType({
@@ -352,21 +269,6 @@ const RootQuery = new GraphQLObjectType({
         session_key: { type: GraphQLInt },
       },
       resolve: f1Resolver.getSessionDetails,
-    },
-    calculateLeagueRanking: {
-      type: LeagueRankingResponseType, // Type de réponse
-      args: {
-        leagueId: { type: new GraphQLNonNull(GraphQLString) }, // Argument requis
-      },
-      resolve: async (_, { leagueId }) => {
-        const league = await LeagueModel.findById(leagueId);
-        if (!league) {
-          throw new Error("League not found");
-        }
-        return {
-          httpStatus: 200,
-        };
-      },
     },
     getEcuries: {
       type: new GraphQLList(EcurieType),
