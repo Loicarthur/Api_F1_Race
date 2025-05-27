@@ -12,6 +12,7 @@ export interface IGp extends Document {
   country_name: string;
   circuit_key: number;
   circuit_short_name: string;
+  circuit_image?: string; 
   gmt_offset: string;
   year: number;
 }
@@ -29,6 +30,7 @@ const GpSchema = new Schema<IGp>(
     country_name: { type: String, required: true },
     circuit_key: { type: Number, required: true },
     circuit_short_name: { type: String, required: true },
+    circuit_image: { type: String, default:"" },
     gmt_offset: { type: String, required: true },
     year: { type: Number, required: true },
   },

@@ -219,10 +219,12 @@ query {
     country_name
     circuit_key
     circuit_short_name
+    circuit_image
     gmt_offset
     year
   }
 }
+
 
 //Récupérer last GP
 query {

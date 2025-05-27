@@ -15,6 +15,7 @@ export const GpType = new GraphQLObjectType({
     country_name: { type: GraphQLString },
     circuit_key: { type: GraphQLInt },
     circuit_short_name: { type: GraphQLString },
+    circuit_image: { type: GraphQLString },
     gmt_offset: { type: GraphQLString },
     year: { type: GraphQLInt },
   },

@@ -26,17 +26,17 @@ const POINTS_SYSTEM: { [position: string]: number } = {
 
 export const createBet = async (
     _: unknown,
-    args: { [argName: string]: any }, // Type générique pour les arguments
-    _context: MyContext // Inclure `context` mais ne pas l'utiliser
+    args: { [argName: string]: any }, 
+    _context: MyContext 
   ) => {
     try {
-      const { input } = args; // Extraire l'input des arguments
+      const { input } = args; 
       const newBet = new BetModel({
         userId: input.userId,
         gpId: input.gpId,
         driverId: input.driverId,
         leagueId: input.leagueId,
-        points: input.points || 0, // Si `points` n'est pas fourni, initialiser à 0
+        points: input.points || 0, 
       });
   
       await newBet.save();

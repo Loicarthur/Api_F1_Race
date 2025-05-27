@@ -377,7 +377,7 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
       type: SyncResponseType,
       resolve: async () => {
         try {
-          await fetchAndSaveLatestGP(); // Appelle la fonction pour synchroniser les Grands Prix
+          await fetchAndSaveLatestGP();
           return { success: true, message: "GP data synchronized successfully!" };
         } catch (error) {
           console.error("Error synchronizing GP data:", error);
@@ -400,6 +400,7 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
         return assignPointsToBet(_, { betId, position }, context);
       },
     },
+    
     syncDriversAndEcuries: {
       type: SyncResponseType,
       resolve: async () => {
