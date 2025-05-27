@@ -26,8 +26,8 @@ query {
 //Ajouter un user dans une ligue 
 mutation {
   addUserToLeague(input: {
-    leagueId: "id league",
-    userId: "id user",
+    leagueId: "6834adb8d73b04120a897282",
+    userId: "67f91f7cc9dc218285b4fb0e",
     admin: true
   }) {
     league {
@@ -35,9 +35,12 @@ mutation {
       leagueName
       maxParticipants
       users {
-        id
-        username
-        email
+        user {
+          id
+          username
+          email
+        }
+        admin
       }
     }
     httpStatus

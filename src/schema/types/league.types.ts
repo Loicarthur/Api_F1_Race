@@ -2,6 +2,16 @@ import { GraphQLObjectType, GraphQLString, GraphQLInt, GraphQLList, GraphQLBoole
 import { ErrorType } from './error.types'; 
 import { UserType } from './auth.types'; 
 
+
+
+export const UserInLeagueType = new GraphQLObjectType({
+  name: 'UserInLeague',
+  fields: () => ({
+    user: { type: UserType }, 
+    admin: { type: GraphQLBoolean }, 
+  }),
+});
+
 // Define the LeagueType
 export const LeagueType = new GraphQLObjectType({
   name: 'League',
@@ -11,12 +21,11 @@ export const LeagueType = new GraphQLObjectType({
     leagueName: { type: GraphQLString },
     maxParticipants: { type: GraphQLInt },
     joinCode: { type: GraphQLString },
-    users: { type: new GraphQLList(UserType) },
-    createdAt: { type: GraphQLString},
-    updatedAt: { type: GraphQLString} 
+    users: { type: new GraphQLList(UserInLeagueType) }, // Utilise UserInLeagueType
+    createdAt: { type: GraphQLString },
+    updatedAt: { type: GraphQLString },
   }),
 });
-
 // Define the LeagueResponseType
 export const LeagueResponseType = new GraphQLObjectType({
   name: 'LeagueResponse',
@@ -68,3 +77,4 @@ export const LeagueByJoinCodeResponseType = new GraphQLObjectType({
     httpStatus: { type: GraphQLInt },
   }),
 });
+

@@ -142,3 +142,11 @@ export const getAllUsers: GraphQLFieldResolver<unknown, MyContext> = async () =>
     };
   }
 };
+
+export const currentUser: GraphQLFieldResolver<unknown, MyContext> = async (_, __, context) => {
+  const user = context.user;
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+  return user;
+};

@@ -34,7 +34,7 @@ import {
 import { getEcuries, getEcurieById } from '../resolvers/ecurie.resolver';
 import { assignPointsToBet, createBet, getBetById, updateBet} from "../resolvers/bet.resolver";
 import fetchAndUpdateDriversAndEcuries from "../services/driver.service";
-import Driver from "../models/Driver";
+import Driver from "../models/Driver"; // Import the Driver model
 
 const f1Resolver = new F1Resolver();
 
@@ -134,8 +134,6 @@ export const CreateEcurieInputType = new GraphQLInputObjectType({
     drivers: { type: new GraphQLList(GraphQLString) }, // Liste des IDs des pilotes
   },
 });
-
-
 
 const BetType = new GraphQLObjectType({
   name: "Bet",

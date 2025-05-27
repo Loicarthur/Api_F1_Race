@@ -187,14 +187,29 @@ export const addUserToLeague: GraphQLFieldResolver<unknown, MyContext, { input: 
     if (!league) {
       throw new Error('League not found');
     }
+
     const user = await UserModel.findById(userId);
     if (!user) {
       throw new Error('User not found');
     }
+
+    // Vérifiez si l'utilisateur est déjà dans la ligue
+    if (league.users.some((u) => u.user.toString() === userId)) {
+      throw new Error('User is already in the league');
+    }
+
+    // Ajouter l'utilisateur à la ligue
     league.users.push({ id: userId, league, user, admin });
     await league.save();
+
+    // Récupérer la ligue avec les informations des utilisateurs
+    const updatedLeague = await LeagueModel.findById(leagueId).populate({
+      path: 'users.user', // Populate les utilisateurs
+      select: 'username email', // Sélectionner uniquement les champs nécessaires
+    });
+
     return {
-      league,
+      league: updatedLeague,
       httpStatus: 200,
     };
   } catch (error) {
