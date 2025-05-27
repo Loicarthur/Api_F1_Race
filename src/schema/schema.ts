@@ -10,10 +10,6 @@ import {
   GraphQLID,
 } from "graphql";
 import { register, login, getAllUsers } from "../resolvers/auth.resolver";
-import { F1Resolver } from "../resolvers/f1.resolver";
-
-import { CarDataType, LapTimeType, TrackStatusType } from "./types/f1.types";
-
 import { AuthResponseType, UserType } from "./types/auth.types";
 import { MyContext } from "../types/MyContext";
 import { leagueResolvers } from "../resolvers/league.resolver";
@@ -34,11 +30,11 @@ import {
 import { getEcuries, getEcurieById } from '../resolvers/ecurie.resolver';
 import { assignPointsToBet, createBet, getBetById, updateBet} from "../resolvers/bet.resolver";
 import fetchAndUpdateDriversAndEcuries from "../services/driver.service";
-import Driver from "../models/Driver"; 
 import fetchAndSaveLatestGP from "../services/gp.service";
-
-const f1Resolver = new F1Resolver();
-
+import { driverResolvers } from "../resolvers/driver.resolver";
+import { EcurieType } from "./types/ecurie.type";
+import { GPType } from "./types/gp.types";
+import { gpResolvers } from "../resolvers/gp.resolver";
 
 // Input type
 const SyncResponseType = new GraphQLObjectType({
@@ -114,16 +110,7 @@ const DeleteLeagueInputType = new GraphQLInputObjectType({
   }),
 });
 
-export const EcurieType = new GraphQLObjectType({
-  name: 'Ecurie',
-  fields: {
-    id: { type: GraphQLString },
-    name: { type: GraphQLString },
-    logoUrl: { type: GraphQLString },
-    color: { type: GraphQLString },
-    drivers: { type: new GraphQLList(GraphQLString) }, // Liste des IDs des pilotes
-  },
-});
+
 
 
 export const CreateEcurieInputType = new GraphQLInputObjectType({
@@ -258,29 +245,6 @@ const RootQuery = new GraphQLObjectType({
         );
       },
     },
-    carData: {
-      type: new GraphQLList(CarDataType),
-      args: {
-        session_key: { type: GraphQLInt },
-        driver_number: { type: GraphQLInt },
-      },
-      resolve: f1Resolver.getCarData,
-    },
-    lapTimes: {
-      type: new GraphQLList(LapTimeType),
-      args: {
-        session_key: { type: GraphQLInt },
-        driver_number: { type: GraphQLInt },
-      },
-      resolve: f1Resolver.getLapTimes,
-    },
-    trackStatus: {
-      type: TrackStatusType,
-      args: {
-        session_key: { type: GraphQLInt },
-      },
-      resolve: f1Resolver.getTrackStatus,
-    },
     
     getEcuries: {
       type: new GraphQLList(EcurieType),
@@ -311,15 +275,13 @@ const RootQuery = new GraphQLObjectType({
       },
 
     },
-    driver: {
-      type: DriverType,
-      args: { id: { type: GraphQLID } }, // Argument pour spécifier l'ID du pilote
-      resolve: async (_, { id }) => {
-        return await Driver.findById(id).populate({
-          path: "ecurie", // Inclure les informations de l'écurie
-          select: "name logoUrl color", // Sélectionner uniquement les champs nécessaires
-        });
-      },
+    drivers: {
+      type: new GraphQLList(DriverType), // Retourne une liste de pilotes
+      resolve: driverResolvers.Query.drivers, // Utilise le resolver pour récupérer les pilotes
+    },
+    gps: {
+      type: new GraphQLList(GPType), // Retourne une liste de Grands Prix
+      resolve: gpResolvers.Query.gps, // Utilise le resolver pour récupérer les GPs
     },
   }),
 });

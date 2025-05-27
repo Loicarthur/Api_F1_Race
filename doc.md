@@ -182,3 +182,25 @@ mutation {
   }
 }
 
+
+//query {
+  drivers {
+    id
+    name
+    picture
+    trigram
+    ecurie {
+      id
+      name
+      color
+    }
+  }
+}
+
+//Pousser le GP dans la base de donnée
+  mutation {
+  syncLatestGP {
+    success
+    message
+  }
+}
