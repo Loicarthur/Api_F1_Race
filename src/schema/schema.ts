@@ -34,7 +34,8 @@ import {
 import { getEcuries, getEcurieById } from '../resolvers/ecurie.resolver';
 import { assignPointsToBet, createBet, getBetById, updateBet} from "../resolvers/bet.resolver";
 import fetchAndUpdateDriversAndEcuries from "../services/driver.service";
-import Driver from "../models/Driver"; // Import the Driver model
+import Driver from "../models/Driver"; 
+import fetchAndSaveLatestGP from "../services/gp.service";
 
 const f1Resolver = new F1Resolver();
 
@@ -439,6 +440,18 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
       ) => {
         const { id, input } = args as { id: string; input: { driverId?: string; points?: number } };
         return updateBet(_, { id, input }, context);
+      },
+    },
+    syncLatestGP: {
+      type: SyncResponseType,
+      resolve: async () => {
+        try {
+          await fetchAndSaveLatestGP(); // Appelle la fonction pour synchroniser les Grands Prix
+          return { success: true, message: "GP data synchronized successfully!" };
+        } catch (error) {
+          console.error("Error synchronizing GP data:", error);
+          return { success: false, message: "Failed to synchronize GP data." };
+        }
       },
     },
     assignPointsToBet: {

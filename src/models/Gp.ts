@@ -1,21 +1,19 @@
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import { Schema, model, Document } from 'mongoose';
 
 export interface IGP extends Document {
-  name: string;
-  round: number;
-  track: Types.ObjectId;
-  dateTime: string;
-  drivers: Types.ObjectId[];
-  classement?: Types.ObjectId[];
+  position: string;
+  driver: string;
+  team: string;
+  number: string;
+  scraped_at: Date;
 }
 
-const GPSchema: Schema = new Schema({
-  name: { type: String, required: true },
-  round: { type: Number, required: true },
-  track: { type: Schema.Types.ObjectId, ref: 'Track', required: true },
-  dateTime: { type: String, required: true },
-  drivers: [{ type: Schema.Types.ObjectId, ref: 'Driver', required: true }],
-  classement: [{ type: Schema.Types.ObjectId, ref: 'GPClassement' }]
+const GPSchema = new Schema<IGP>({
+  position: { type: String, required: true }, // Position du pilote
+  driver: { type: String, required: true },   // Nom du pilote
+  team: { type: String, required: true },     // Nom de l'équipe
+  number: { type: String, required: true },   // Numéro du pilote
+  scraped_at: { type: Date, required: true }, // Date de récupération des 
 });
 
-export default mongoose.model<IGP>('GP', GPSchema);
+export default model<IGP>('GP', GPSchema);

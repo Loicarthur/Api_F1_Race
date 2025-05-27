@@ -6,6 +6,7 @@ import connectDB from './config/database';
 import { port } from './config/connectionDB';
 import cron from 'node-cron';
 import fetchAndUpdateDrivers from './services/driver.service';
+import fetchAndSaveLatestGP from './services/gp.service';
 
 // Créer l'application Express
 const app = express();
@@ -19,6 +20,9 @@ connectDB()
     //Synchronisation immédiate des pilotes
     console.log("Synchronisation initiale des pilotes...");
     await fetchAndUpdateDrivers();
+    //synchonisation des GP
+    console.log('Synchronisation initiale des GPs...');
+    await fetchAndSaveLatestGP();
 
     //Planifier la synchronisation annuelle
     cron.schedule("0 0 1 1 *", async () => {
