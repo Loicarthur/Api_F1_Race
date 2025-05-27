@@ -13,12 +13,6 @@ import { register, login, getAllUsers } from "../resolvers/auth.resolver";
 import { AuthResponseType, UserType } from "./types/auth.types";
 import { MyContext } from "../types/MyContext";
 import { leagueResolvers } from "../resolvers/league.resolver";
-import { gpClassementResolvers } from '../resolvers/gp-classement.resolver';
-
-
-
-import { GPClassementType } from "./types/gp-classement.types";
-
 import {
   DeleteLeagueResponseType,
   GetMembersOfLeagueResponseType,
@@ -33,8 +27,8 @@ import fetchAndUpdateDriversAndEcuries from "../services/driver.service";
 import fetchAndSaveLatestGP from "../services/gp.service";
 import { driverResolvers } from "../resolvers/driver.resolver";
 import { EcurieType } from "./types/ecurie.type";
-import { GPType } from "./types/gp.types";
-import { gpResolvers } from "../resolvers/gp.resolver";
+import { gpResolvers } from '../resolvers/gp.resolver'; 
+import { GpType } from "./types/gp.type";
 
 // Input type
 const SyncResponseType = new GraphQLObjectType({
@@ -183,20 +177,6 @@ const RootQuery = new GraphQLObjectType({
       type: new GraphQLList(LeagueType),
       resolve: leagueResolvers.Query.leagues,
     },
-    gpClassement: {
-      type: new GraphQLList(GPClassementType),
-      args: {
-        gpId: { type: new GraphQLNonNull(GraphQLString) },
-      },
-      resolve: gpClassementResolvers.Query.gpClassement,
-    },
-    userClassements: {
-      type: new GraphQLList(GPClassementType),
-      args: {
-        userId: { type: new GraphQLNonNull(GraphQLString) },
-      },
-      resolve: gpClassementResolvers.Query.userClassements,
-    },
     publicLeagues: {
       type: PublicLeaguesResponseType,
       resolve: leagueResolvers.Query.publicLeagues,
@@ -260,6 +240,14 @@ const RootQuery = new GraphQLObjectType({
         return getEcurieById(_, { id });
       },
     },
+    gps: {
+      type: new GraphQLList(GpType), 
+      resolve: gpResolvers.Query.gps, 
+    },
+    lastGp: {
+      type: GpType, 
+      resolve: gpResolvers.Query.lastGp,
+    },
     getBetById: {
       type: BetType,
       args: {
@@ -272,17 +260,13 @@ const RootQuery = new GraphQLObjectType({
       ) => {
         const { id } = args as { id: string };
         return getBetById(_, { id }, context);
-      },
+            },
 
-    },
-    drivers: {
-      type: new GraphQLList(DriverType), // Retourne une liste de pilotes
-      resolve: driverResolvers.Query.drivers, // Utilise le resolver pour récupérer les pilotes
-    },
-    gps: {
-      type: new GraphQLList(GPType), // Retourne une liste de Grands Prix
-      resolve: gpResolvers.Query.gps, // Utilise le resolver pour récupérer les GPs
-    },
+          },
+          drivers: {
+            type: new GraphQLList(DriverType), 
+            resolve: driverResolvers.Query.drivers, 
+          },
   }),
 });
 
@@ -341,21 +325,6 @@ const RootMutation = new GraphQLObjectType<unknown, MyContext>({
           info
         );
       },
-    },
-    // GP Classement mutations
-    createGpClassement: {
-      type: GPClassementType,
-      args: {
-        gpId: { type: new GraphQLNonNull(GraphQLString) },
-      },
-      resolve: gpClassementResolvers.Mutation.createGPClassement,
-    },
-    updateGpClassementResult: {
-      type: GPClassementType,
-      args: {
-        gpId: { type: new GraphQLNonNull(GraphQLString) },
-      },
-      resolve: gpClassementResolvers.Mutation.updateGPClassementResult,
     },
     addUserToLeague: {
       type: LeagueResponseType,

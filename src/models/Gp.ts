@@ -1,19 +1,38 @@
 import { Schema, model, Document } from 'mongoose';
 
-export interface IGP extends Document {
-  position: string;
-  driver: string;
-  team: string;
-  number: string;
-  scraped_at: Date;
+export interface IGp extends Document {
+  gp_id: number;
+  location: string;
+  date_start: Date;
+  date_end: Date;
+  session_type: string;
+  session_name: string;
+  country_key: number;
+  country_code: string;
+  country_name: string;
+  circuit_key: number;
+  circuit_short_name: string;
+  gmt_offset: string;
+  year: number;
 }
 
-const GPSchema = new Schema<IGP>({
-  position: { type: String, required: true }, // Position du pilote
-  driver: { type: String, required: true },   // Nom du pilote
-  team: { type: String, required: true },     // Nom de l'équipe
-  number: { type: String, required: true },   // Numéro du pilote
-  scraped_at: { type: Date, required: true }, // Date de récupération des 
-});
+const GpSchema = new Schema<IGp>(
+  {
+    gp_id: { type: Number, required: true },
+    location: { type: String, required: true },
+    date_start: { type: Date, required: true },
+    date_end: { type: Date, required: true },
+    session_type: { type: String, required: true },
+    session_name: { type: String, required: true },
+    country_key: { type: Number, required: true },
+    country_code: { type: String, required: true },
+    country_name: { type: String, required: true },
+    circuit_key: { type: Number, required: true },
+    circuit_short_name: { type: String, required: true },
+    gmt_offset: { type: String, required: true },
+    year: { type: Number, required: true },
+  },
+  { collection: 'gp' } // Spécifie explicitement le nom de la collection
+);
 
-export default model<IGP>('GP', GPSchema);
+export default model<IGp>('Gp', GpSchema);

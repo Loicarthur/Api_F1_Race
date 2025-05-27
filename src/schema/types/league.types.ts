@@ -21,7 +21,7 @@ export const LeagueType = new GraphQLObjectType({
     leagueName: { type: GraphQLString },
     maxParticipants: { type: GraphQLInt },
     joinCode: { type: GraphQLString },
-    users: { type: new GraphQLList(UserInLeagueType) }, // Utilise UserInLeagueType
+    users: { type: new GraphQLList(UserInLeagueType) },
     createdAt: { type: GraphQLString },
     updatedAt: { type: GraphQLString },
   }),

@@ -1,33 +1,19 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import { Schema, model, Document } from 'mongoose';
 
-export interface IGPClassement extends Document {
-  race: Types.ObjectId;
-  driver: Types.ObjectId;
-  isDNF: boolean;
-  position: number;
-  time: string;
-  points: number;
-  score?: number;
-  actualResult?: {
-    position: number;
-    points?: number;
-    // Ajoute ici d'autres propriétés si besoin
-  };
+export interface IGP extends Document {
+  position: string;
+  driver: string;
+  team: string;
+  number: string;
+  scraped_at: Date;
 }
 
-const GPClassementSchema = new Schema({
-  race: { type: Schema.Types.ObjectId, ref: 'GP', required: true },
-  driver: { type: Schema.Types.ObjectId, ref: 'Driver', required: true },
-  isDNF: { type: Boolean, required: true },
-  position: { type: Number, required: true },
-  time: { type: String, required: true },
-  points: { type: Number, required: true },
-  score: { type: Number, default: 0 },
-  actualResult: {
-    position: { type: Number },
-    points: { type: Number },
-    // Ajoute ici d'autres propriétés si besoin
-  }
+const GPSchema = new Schema<IGP>({
+  position: { type: String, required: true }, // Position du pilote
+  driver: { type: String, required: true },   // Nom du pilote
+  team: { type: String, required: true },     // Nom de l'équipe
+  number: { type: String, required: true },   // Numéro du pilote
+  scraped_at: { type: Date, required: true }, // Date de récupération des 
 });
 
-export default model<IGPClassement>('GPClassement', GPClassementSchema);
+export default model<IGP>('GP', GPSchema);

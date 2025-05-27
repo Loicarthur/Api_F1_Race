@@ -204,3 +204,43 @@ mutation {
     message
   }
 }
+
+//pour récupérer tous les GP
+query {
+  gps {
+    gp_id
+    location
+    date_start
+    date_end
+    session_type
+    session_name
+    country_key
+    country_code
+    country_name
+    circuit_key
+    circuit_short_name
+    gmt_offset
+    year
+  }
+}
+
+//Récupérer last GP
+query {
+  lastGp {
+    gp_id
+    location
+    date_start
+    date_end
+    session_type
+    session_name
+    country_key
+    country_code
+    country_name
+    circuit_key
+    circuit_short_name
+    gmt_offset
+    year
+  }
+}
+
+

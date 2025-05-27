@@ -1,5 +1,5 @@
 import axios from 'axios';
-import GP from '../models/Gp';
+import GP from '../models/GpClassement';
 
 const fetchAndSaveLatestGP = async () => {
   try {
