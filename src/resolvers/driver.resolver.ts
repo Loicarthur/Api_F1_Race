@@ -7,16 +7,16 @@ export class DriverResolver {
   // Query: récupérer tous les pilotes avec leur écurie (sans logoUrl)
   getDrivers: GraphQLFieldResolver<any, MyContext> = async () => {
     return await Driver.find().populate({
-      path: 'ecurie', // Inclure les informations de l'écurie
-      select: 'name color', // Retirer le champ logoUrl
+      path: 'ecurie',
+      select: 'name color', 
     });
   };
 
   // Query: récupérer un pilote par son id avec son écurie (sans logoUrl)
   getDriver: GraphQLFieldResolver<any, MyContext> = async (_, { id }) => {
     return await Driver.findById(id).populate({
-      path: 'ecurie', // Inclure les informations de l'écurie
-      select: 'name color', // Retirer le champ logoUrl
+      path: 'ecurie', 
+      select: 'name color',
     });
   };
 

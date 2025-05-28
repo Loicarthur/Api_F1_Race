@@ -34,7 +34,7 @@ const GpSchema = new Schema<IGp>(
     gmt_offset: { type: String, required: true },
     year: { type: Number, required: true },
   },
-  { collection: 'gp' } // Spécifie explicitement le nom de la collection
+  { collection: 'gp' } 
 );
 
 export default model<IGp>('Gp', GpSchema);

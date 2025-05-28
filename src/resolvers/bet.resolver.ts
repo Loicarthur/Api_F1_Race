@@ -87,13 +87,13 @@ _: unknown, { betId, position }: { betId: string; position: string; }, _context?
 export const updateBet = async (
     _: unknown,
     { id, input }: { id: string; input: { driverId?: string; points?: number } },
-    _context: MyContext // Inclure `context` mais ne pas l'utiliser
+    _context: MyContext 
   ) => {
     try {
       const updatedBet = await BetModel.findByIdAndUpdate(
         id,
         { $set: input },
-        { new: true, runValidators: true } // Retourner le document mis à jour et valider les modifications
+        { new: true, runValidators: true } 
       );
   
       if (!updatedBet) {

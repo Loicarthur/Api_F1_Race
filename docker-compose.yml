@@ -14,7 +14,13 @@ services:
       - ./src:/usr/src/app/src
     depends_on:
       - mongo 
-
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+      
   # Service MongoDB
   mongo:
     image: mongo:latest

@@ -234,7 +234,7 @@ query {
     date_start
     date_end
     session_type
-    session_name
+    session_namet 
     country_key
     country_code
     country_name
