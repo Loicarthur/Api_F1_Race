@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(./node_modules/.bin/tsc *)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=2048\" ./node_modules/.bin/tsc *)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=2048\" node_modules/.bin/tsc.cmd --noEmit)",
+      "Bash(node_modules/.bin/jest.cmd --testPathPattern=\"middleware|rateLimiter\" --no-coverage)",
+      "Bash(Test-Path *)",
+      "Bash(npm test *)",
+      "Bash(npx jest *)",
+      "Bash(node_modules/.bin/jest --no-coverage --passWithNoTests)",
+      "Bash(git remote *)",
+      "Bash(python3 *)",
+      "Bash(node -e \"const fs=require\\('fs'\\); const yaml=require\\('js-yaml'\\); yaml.load\\(fs.readFileSync\\('C:/loic/Api_F1_Race/.github/workflows/ci.yml','utf8'\\)\\); console.log\\('YAML valid'\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const content=fs.readFileSync\\('C:/loic/Api_F1_Race/.github/workflows/ci.yml','utf8'\\); console.log\\('File size:', content.length, 'bytes'\\); console.log\\('Lines:', content.split\\('\\\\n'\\).length\\)\")",
+      "Bash(node_modules/.bin/jest --no-coverage)",
+      "Bash(node *)",
+      "Bash(npx prettier *)",
+      "Bash(node_modules/.bin/jest --no-coverage --testPathPattern=\"rateLimiter|middleware\")",
+      "Bash(node_modules/.bin/jest --no-coverage --testPathPatterns=\"rateLimiter|middleware\")",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(git fetch *)"
+    ]
+  }
+}
