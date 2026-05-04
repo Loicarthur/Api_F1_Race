@@ -1,5 +1,5 @@
 import { GraphQLObjectType, GraphQLString, GraphQLID, GraphQLList } from 'graphql';
-// 
+//
 import { BetSelectionResultType } from './bet-selection-result.types';
 
 import { GraphQLFieldConfigMap } from 'graphql';
@@ -11,6 +11,6 @@ export const UserType = new GraphQLObjectType({
     email: { type: GraphQLString },
     username: { type: GraphQLString },
     // leagues: { type: new GraphQLList(UserLeagueType) },
-    bets: { type: new GraphQLList(BetSelectionResultType) }
-  })
+    bets: { type: new GraphQLList(BetSelectionResultType) },
+  }),
 });

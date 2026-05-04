@@ -37,3 +37,6 @@ vercel
 typescript
 *.tsbuildinfo
 next-env.d.ts
+
+build output
+/dist

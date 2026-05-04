@@ -1,16 +1,15 @@
 import { Schema, model, Document } from 'mongoose';
 import { User } from './User';
 
-
 export interface userLeague {
   id: string;
   league: League;
   user: User;
-  admin: boolean; 
+  admin: boolean;
 }
 
 export interface League extends Document {
-  isPrivate: boolean; 
+  isPrivate: boolean;
   leagueName: string;
   maxParticipants: number;
   joinCode: string;
@@ -21,7 +20,7 @@ const LeagueSchema = new Schema<League>({
   isPrivate: {
     type: Boolean,
     required: true,
-    default: true, 
+    default: true,
   },
   leagueName: {
     type: String,
@@ -38,27 +37,29 @@ const LeagueSchema = new Schema<League>({
     required: true,
     unique: true,
   },
-  users: [{
-    id: {
-      type: String,
-      required: true,
+  users: [
+    {
+      id: {
+        type: String,
+        required: true,
+      },
+      league: {
+        type: Schema.Types.ObjectId,
+        ref: 'League',
+        required: true,
+      },
+      user: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+      admin: {
+        type: Boolean,
+        required: true,
+        default: false,
+      },
     },
-    league: {
-      type: Schema.Types.ObjectId,
-      ref: 'League', 
-      required: true,
-    },
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: 'User', 
-      required: true,
-    },
-    admin: {
-      type: Boolean,
-      required: true,
-      default: false, 
-    },
-  }],
+  ],
 });
 
 export const LeagueModel = model<League>('League', LeagueSchema);

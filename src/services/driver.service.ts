@@ -1,10 +1,11 @@
-import axios from "axios";
-import Driver from "../models/Driver";
-import { EcurieModel } from "../models/Ecurie";
+import axios from 'axios';
+import Driver from '../models/Driver';
+import { EcurieModel } from '../models/Ecurie';
+import { logger } from '../utils/logger';
 
 const fetchAndUpdateDriversAndEcuries = async () => {
   try {
-    const response = await axios.get("https://api.openf1.org/v1/drivers?session_key=latest");
+    const response = await axios.get('https://api.openf1.org/v1/drivers?session_key=latest');
     const driversFromApi = response.data;
 
     const ecuriesMap: { [key: string]: any } = {};
@@ -64,9 +65,9 @@ const fetchAndUpdateDriversAndEcuries = async () => {
       }
     }
 
-    console.log("Drivers and Ecuries synchronized successfully!");
+    logger.info('Drivers and Ecuries synchronized successfully');
   } catch (error) {
-    console.error("Error fetching or updating drivers and ecuries:", error);
+    logger.error('Error fetching or updating drivers and ecuries', { error });
   }
 };
 export default fetchAndUpdateDriversAndEcuries;

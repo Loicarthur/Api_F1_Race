@@ -11,7 +11,7 @@ const TrackSchema: Schema = new Schema({
   trackName: { type: String, required: true },
   countryName: { type: String, required: true },
   pictureCountry: { type: String, required: true },
-  pictureTrack: { type: String, required: true }
+  pictureTrack: { type: String, required: true },
 });
 
 export default mongoose.model<ITrack>('Track', TrackSchema);

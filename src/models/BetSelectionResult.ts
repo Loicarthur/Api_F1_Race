@@ -11,7 +11,7 @@ const BetSelectionResultSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   gp: { type: Schema.Types.ObjectId, ref: 'GP', required: true },
   pointsP10: { type: Number },
-  driverP10: { type: Schema.Types.ObjectId, ref: 'Driver', required: true }
+  driverP10: { type: Schema.Types.ObjectId, ref: 'Driver', required: true },
 });
 
 export default model<IBetSelectionResult>('BetSelectionResult', BetSelectionResultSchema);

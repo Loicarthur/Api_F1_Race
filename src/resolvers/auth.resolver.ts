@@ -2,151 +2,163 @@ import { GraphQLFieldResolver } from 'graphql';
 import { UserModel } from '../models/User';
 import jwt from 'jsonwebtoken';
 import { MyContext } from '../types/MyContext';
+import { jwtSecret } from '../config/connectionDB';
+import { requireAdmin } from '../middleware/auth';
+import { checkRateLimit } from '../utils/rateLimiter';
+import { logger } from '../utils/logger';
 
-// Configuration JWT
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const JWT_EXPIRES_IN = '24h';
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Fonction utilitaire pour générer un token JWT
 const generateToken = (userId: string): string => {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign({ userId }, jwtSecret, { expiresIn: JWT_EXPIRES_IN });
 };
 
-// Resolver pour l'inscription
+const getClientIp = (context: MyContext): string =>
+  context?.req?.ip ?? context?.req?.socket?.remoteAddress ?? 'unknown';
+
 export const register: GraphQLFieldResolver<unknown, MyContext> = async (_, args, context) => {
   try {
+    checkRateLimit(`register:${getClientIp(context)}`, 3, 60 * 60 * 1000);
+
     const { username, email, password } = args.input;
 
-    const existingUser = await UserModel.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) {
+    if (!EMAIL_REGEX.test(String(email))) {
+      return {
+        token: null,
+        user: null,
+        error: { message: 'Invalid email format', code: 'INVALID_INPUT', httpStatus: 400 },
+      };
+    }
+
+    if (String(password).length < 8) {
       return {
         token: null,
         user: null,
         error: {
-          message: 'User already exists',
-          code: 'USER_ALREADY_EXISTS',
-          httpStatus: 400, 
+          message: 'Password must be at least 8 characters',
+          code: 'INVALID_INPUT',
+          httpStatus: 400,
         },
-        httpStatus: 400, 
       };
     }
 
-    const user = await UserModel.create({ username, email, password });
-    const token = generateToken(user.id);
+    const existingUser = await UserModel.findOne({
+      $or: [{ email: String(email) }, { username: String(username) }],
+    });
+    if (existingUser) {
+      return {
+        token: null,
+        user: null,
+        error: { message: 'User already exists', code: 'USER_ALREADY_EXISTS', httpStatus: 400 },
+      };
+    }
 
-    context.res.status(201); 
+    const user = await UserModel.create({
+      username: String(username),
+      email: String(email),
+      password,
+    });
+    const token = generateToken(user.id);
+    logger.info('User registered', { userId: user.id, username: user.username });
+
     return {
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-      },
+      user: { id: user.id, username: user.username, email: user.email },
       error: null,
-      httpStatus: 201, 
+      httpStatus: 201,
     };
   } catch (error) {
-    context.res.status(500); 
+    if (error instanceof Error && error.message.startsWith('Too many')) {
+      return {
+        token: null,
+        user: null,
+        error: { message: error.message, code: 'RATE_LIMITED', httpStatus: 429 },
+      };
+    }
+    logger.error('Register error', { error });
     return {
       token: null,
       user: null,
       error: {
         message: error instanceof Error ? error.message : 'Une erreur inattendue est survenue',
         code: 'INTERNAL_SERVER_ERROR',
-        httpStatus: 500, 
+        httpStatus: 500,
       },
-      httpStatus: 500, 
     };
   }
 };
 
-// Resolver pour la connexion
 export const login: GraphQLFieldResolver<unknown, MyContext> = async (_, args, context) => {
   try {
+    checkRateLimit(`login:${getClientIp(context)}`, 5, 15 * 60 * 1000);
+
     const { email, password } = args.input;
 
-    const user = await UserModel.findOne({ email });
-    if (!user) {
-      // Définir le statut HTTP à 404 si l'utilisateur n'est pas trouvé
-      context.res.status(404);
+    if (!EMAIL_REGEX.test(String(email))) {
       return {
         token: null,
         user: null,
-        error: {
-          message: 'User not found',
-          code: 'USER_NOT_FOUND',
-          httpStatus: '404'
-        }
+        error: { message: 'Invalid email format', code: 'INVALID_INPUT', httpStatus: 400 },
+      };
+    }
+
+    const user = await UserModel.findOne({ email: String(email) });
+    if (!user) {
+      return {
+        token: null,
+        user: null,
+        error: { message: 'Invalid credentials', code: 'INVALID_CREDENTIALS', httpStatus: 401 },
       };
     }
 
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
-      // Définir le statut HTTP à 401 si le mot de passe est invalide
-      context.res.status(401);
+      logger.warn('Failed login attempt', { email: String(email), ip: getClientIp(context) });
       return {
         token: null,
         user: null,
-        error: {
-          message: 'Invalid password',
-          code: 'INVALID_CREDENTIALS',
-          httpStatus: '401'
-        }
+        error: { message: 'Invalid credentials', code: 'INVALID_CREDENTIALS', httpStatus: 401 },
       };
     }
 
     const token = generateToken(user.id);
+    logger.info('User logged in', { userId: user.id });
 
-    // Définir le statut HTTP à 200 si la connexion est réussie
-    context.res.status(201);
     return {
       token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email
-      },
-      error: null
+      user: { id: user.id, username: user.username, email: user.email },
+      error: null,
+      httpStatus: 200,
     };
   } catch (error) {
-    // Définir le statut HTTP à 500 en cas d'erreur interne
-    context.res.status(500);
+    if (error instanceof Error && error.message.startsWith('Too many')) {
+      return {
+        token: null,
+        user: null,
+        error: { message: error.message, code: 'RATE_LIMITED', httpStatus: 429 },
+      };
+    }
+    logger.error('Login error', { error });
     return {
       token: null,
       user: null,
       error: {
         message: error instanceof Error ? error.message : 'Une erreur inattendue est survenue',
         code: 'INTERNAL_SERVER_ERROR',
-        httpStatus: '500'
-      }
+        httpStatus: 500,
+      },
     };
   }
 };
 
-// Resolver pour obtenir tous les utilisateurs
-export const getAllUsers: GraphQLFieldResolver<unknown, MyContext> = async () => {
-  try {
-    const users = await UserModel.find({}, '-password');
-    return users.map(user => ({
-      id: user.id,
-      username: user.username,
-      email: user.email
-    }));  
-  } catch (error) {
-    return {
-      error: {
-        message: error instanceof Error ? error.message : 'Une erreur inattendue est survenue',
-        code: 'INTERNAL_SERVER_ERROR',
-        httpStatus: '500'
-      }
-    };
-  }
+export const getAllUsers: GraphQLFieldResolver<unknown, MyContext> = async (_, __, context) => {
+  requireAdmin(context);
+  const users = await UserModel.find({}, '-password');
+  return users.map((user) => ({ id: user.id, username: user.username, email: user.email }));
 };
 
 export const currentUser: GraphQLFieldResolver<unknown, MyContext> = async (_, __, context) => {
-  const user = context.user;
-  if (!user) {
-    throw new Error('Not authenticated');
-  }
-  return user;
+  if (!context?.user) throw new Error('Not authenticated');
+  return context.user;
 };

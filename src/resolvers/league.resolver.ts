@@ -1,9 +1,11 @@
 import { GraphQLFieldResolver } from 'graphql';
-import { League, LeagueModel } from '../models/League'; 
+import { League, LeagueModel } from '../models/League';
 import { MyContext } from '../types/MyContext';
 import { UserModel } from '../models/User';
+import { BetModel } from '../models/Bet';
+import { requireAuth } from '../middleware/auth';
+import { logger } from '../utils/logger';
 
-// Fonction utilitaire pour générer un code de participation
 function generateJoinCode(length: number): string {
   let result = '';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -14,8 +16,8 @@ function generateJoinCode(length: number): string {
   return result;
 }
 
-// Resolver pour créer une ligue
-export const createLeague: GraphQLFieldResolver<unknown, MyContext> = async (_, args) => {
+export const createLeague: GraphQLFieldResolver<unknown, MyContext> = async (_, args, context) => {
+  requireAuth(context);
   try {
     const { isPrivate, leagueName, maxParticipants } = args.input;
     const existingLeague = await LeagueModel.findOne({ leagueName });
@@ -30,7 +32,6 @@ export const createLeague: GraphQLFieldResolver<unknown, MyContext> = async (_, 
       };
     }
 
-    // Génération d'un code de participation unique
     let joinCode;
     let exists = true;
     while (exists) {
@@ -39,7 +40,6 @@ export const createLeague: GraphQLFieldResolver<unknown, MyContext> = async (_, 
       exists = !!leagueWithJoinCode;
     }
 
-    // Créez la nouvelle ligue
     const league = new LeagueModel({ isPrivate, leagueName, maxParticipants, joinCode, users: [] });
     await league.save();
     return {
@@ -51,7 +51,7 @@ export const createLeague: GraphQLFieldResolver<unknown, MyContext> = async (_, 
     return {
       league: null,
       error: {
-        message: error instanceof Error ? error.message : 'Une erreur inattendue est survenue',
+        message: error instanceof Error ? error.message : 'An unexpected error occurred',
         code: 'INTERNAL_SERVER_ERROR',
         httpStatus: '500',
       },
@@ -59,18 +59,15 @@ export const createLeague: GraphQLFieldResolver<unknown, MyContext> = async (_, 
   }
 };
 
-// Obtient toutes les ligues
 export const getAllLeagues: GraphQLFieldResolver<unknown, MyContext> = async () => {
   try {
-    const leagues = await LeagueModel.find({});
-    return leagues; 
+    return await LeagueModel.find({});
   } catch (error) {
-    console.error("Erreur lors de la récupération des ligues :", error);
-    throw new Error(error instanceof Error ? error.message : 'Une erreur inattendue est survenue');
+    logger.error('Error fetching leagues', { error });
+    throw new Error(error instanceof Error ? error.message : 'An unexpected error occurred');
   }
 };
 
-// Resolver to get all public leagues
 export const getAllPublicLeagues: GraphQLFieldResolver<unknown, MyContext> = async () => {
   try {
     const leagues = await LeagueModel.find({ isPrivate: false });
@@ -78,7 +75,7 @@ export const getAllPublicLeagues: GraphQLFieldResolver<unknown, MyContext> = asy
       leagues,
       httpStatus: 200,
     };
-  } catch (error) {
+  } catch {
     return {
       leagues: null,
       httpStatus: 500,
@@ -86,18 +83,24 @@ export const getAllPublicLeagues: GraphQLFieldResolver<unknown, MyContext> = asy
   }
 };
 
-// Resolver to get leagues by user ID
-export const getLeaguesByUserId: GraphQLFieldResolver<unknown, MyContext, { userId: string }> = async (_, { userId }) => {
+export const getLeaguesByUserId: GraphQLFieldResolver<
+  unknown,
+  MyContext,
+  { userId: string }
+> = async (_, { userId }) => {
   try {
-    const leagues = await LeagueModel.find({ 'users.user': userId });
-    return leagues; 
+    return await LeagueModel.find({ 'users.user': userId });
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : 'An unexpected error occurred');
   }
 };
 
-// Resolver to delete a league
-export const deleteLeague: GraphQLFieldResolver<unknown, MyContext, { leagueId: string }> = async (_, { leagueId }) => {
+export const deleteLeague: GraphQLFieldResolver<unknown, MyContext, { leagueId: string }> = async (
+  _,
+  { leagueId },
+  context
+) => {
+  requireAuth(context);
   try {
     const league = await LeagueModel.findByIdAndDelete(leagueId);
     if (!league) {
@@ -121,8 +124,12 @@ export const deleteLeague: GraphQLFieldResolver<unknown, MyContext, { leagueId: 
   }
 };
 
-// Resolver to modify a league
-export const modifyLeague: GraphQLFieldResolver<unknown, MyContext, { leagueId: string; input: Partial<League> }> = async (_, { leagueId, input }) => {
+export const modifyLeague: GraphQLFieldResolver<
+  unknown,
+  MyContext,
+  { leagueId: string; input: Partial<League> }
+> = async (_, { leagueId, input }, context) => {
+  requireAuth(context);
   try {
     const league = await LeagueModel.findByIdAndUpdate(leagueId, input, { new: true });
     if (!league) {
@@ -137,8 +144,11 @@ export const modifyLeague: GraphQLFieldResolver<unknown, MyContext, { leagueId: 
   }
 };
 
-// Resolver to get league by join code
-export const getLeagueByJoinCode: GraphQLFieldResolver<unknown, MyContext, { input: { joinCode: string } }> = async (_, { input }) => {
+export const getLeagueByJoinCode: GraphQLFieldResolver<
+  unknown,
+  MyContext,
+  { input: { joinCode: string } }
+> = async (_, { input }) => {
   try {
     if (!input || !input.joinCode) {
       return {
@@ -179,8 +189,12 @@ export const getLeagueByJoinCode: GraphQLFieldResolver<unknown, MyContext, { inp
   }
 };
 
-// Resolver to add a user to a league
-export const addUserToLeague: GraphQLFieldResolver<unknown, MyContext, { input: { leagueId: string; userId: string; admin?: boolean } }> = async (_, { input }) => {
+export const addUserToLeague: GraphQLFieldResolver<
+  unknown,
+  MyContext,
+  { input: { leagueId: string; userId: string; admin?: boolean } }
+> = async (_, { input }, context) => {
+  requireAuth(context);
   const { leagueId, userId, admin = false } = input;
   try {
     const league = await LeagueModel.findById(leagueId);
@@ -193,19 +207,16 @@ export const addUserToLeague: GraphQLFieldResolver<unknown, MyContext, { input: 
       throw new Error('User not found');
     }
 
-    // Vérifiez si l'utilisateur est déjà dans la ligue
     if (league.users.some((u) => u.user.toString() === userId)) {
       throw new Error('User is already in the league');
     }
 
-    // Ajouter l'utilisateur à la ligue
     league.users.push({ id: userId, league, user, admin });
     await league.save();
 
-    // Récupérer la ligue avec les informations des utilisateurs
     const updatedLeague = await LeagueModel.findById(leagueId).populate({
-      path: 'users.user', // Populate les utilisateurs
-      select: 'username email', // Sélectionner uniquement les champs nécessaires
+      path: 'users.user',
+      select: 'username email',
     });
 
     return {
@@ -217,9 +228,11 @@ export const addUserToLeague: GraphQLFieldResolver<unknown, MyContext, { input: 
   }
 };
 
-
-// Resolver to get members of a league
-export const getMembersOfLeague: GraphQLFieldResolver<unknown, MyContext, { leagueId: string }> = async (_, { leagueId }) => {
+export const getMembersOfLeague: GraphQLFieldResolver<
+  unknown,
+  MyContext,
+  { leagueId: string }
+> = async (_, { leagueId }) => {
   try {
     const league = await LeagueModel.findById(leagueId).populate('users.user');
     if (!league) {
@@ -234,8 +247,12 @@ export const getMembersOfLeague: GraphQLFieldResolver<unknown, MyContext, { leag
   }
 };
 
-// Resolver to leave a league
-export const leaveLeague: GraphQLFieldResolver<unknown, MyContext, { input: { leagueId: string; userId: string } }> = async (_, { input }) => {
+export const leaveLeague: GraphQLFieldResolver<
+  unknown,
+  MyContext,
+  { input: { leagueId: string; userId: string } }
+> = async (_, { input }, context) => {
+  requireAuth(context);
   const { leagueId, userId } = input;
   try {
     const league = await LeagueModel.findById(leagueId);
@@ -243,8 +260,7 @@ export const leaveLeague: GraphQLFieldResolver<unknown, MyContext, { input: { le
       throw new Error('League not found');
     }
 
-    // Supprime l'utilisateur de la ligue
-    league.users = league.users.filter(user => user.id !== userId);
+    league.users = league.users.filter((user) => user.id !== userId);
     await league.save();
 
     return {
@@ -261,12 +277,7 @@ export const leaveLeague: GraphQLFieldResolver<unknown, MyContext, { input: { le
   }
 };
 
-import { BetModel } from '../models/Bet';
-
-export const calculateLeagueRanking = async (
-  _: unknown,
-  { leagueId }: { leagueId: string }
-) => {
+export const calculateLeagueRanking = async (_: unknown, { leagueId }: { leagueId: string }) => {
   try {
     const bets = await BetModel.find({ leagueId }).populate('userId');
 
@@ -283,19 +294,13 @@ export const calculateLeagueRanking = async (
       return acc;
     }, {});
 
-    // Convertir l'objet en tableau et trier par points décroissants
-    const sortedRanking = Object.values(ranking).sort(
-      (a: any, b: any) => b.totalPoints - a.totalPoints
-    );
-
-    return sortedRanking;
+    return Object.values(ranking).sort((a: any, b: any) => b.totalPoints - a.totalPoints);
   } catch (error) {
-    console.error('Error in calculateLeagueRanking:', error);
+    logger.error('Error in calculateLeagueRanking', { error });
     throw new Error('Failed to calculate league ranking');
   }
 };
 
-// Export your resolvers
 export const leagueResolvers = {
   Query: {
     leagues: getAllLeagues,
@@ -303,7 +308,6 @@ export const leagueResolvers = {
     leaguesByUserId: getLeaguesByUserId,
     leagueByJoinCode: getLeagueByJoinCode,
     getMembersOfLeague: getMembersOfLeague,
-    
   },
   Mutation: {
     createLeague,
@@ -313,4 +317,3 @@ export const leagueResolvers = {
     leaveLeague,
   },
 };
-

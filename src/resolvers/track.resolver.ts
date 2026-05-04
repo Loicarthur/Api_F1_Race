@@ -7,7 +7,7 @@ export const trackResolvers = {
     },
     getTrackById: async (_: any, { id }: { id: string }) => {
       return await Track.findById(id);
-    }
+    },
   },
   Mutation: {
     createTrack: async (_: any, { input }: any) => {
@@ -20,6 +20,6 @@ export const trackResolvers = {
     deleteTrack: async (_: any, { id }: { id: string }) => {
       await Track.findByIdAndDelete(id);
       return { id };
-    }
-  }
+    },
+  },
 };

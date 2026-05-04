@@ -1,5 +1,7 @@
 # F1 Race Backend API
 
+[![CI/CD](https://github.com/Loicarthur/Api_F1_Race/actions/workflows/ci.yml/badge.svg)](https://github.com/Loicarthur/Api_F1_Race/actions/workflows/ci.yml)
+
 Une API GraphQL performante pour suivre les pilotes, les écuries et les Grands Prix de Formule 1, incluant un système de paris et une synchronisation automatique avec les données officielles.
 
 ## 🚀 Points Forts
@@ -82,11 +84,8 @@ JWT_SECRET=votre_secret_tres_long_et_securise
 ---
 
 ## 📈 À Améliorer
-- [ ] **Tests** : Ajouter des tests unitaires et d'intégration avec Jest.
-- [ ] **Validation** : Implémenter Zod ou Joi pour une validation stricte des entrées.
-- [ ] **Logging** : Remplacer `console.log` par Winston ou Pino pour de meilleurs logs de production.
-- [ ] **Rate Limiting** : Protéger l'API contre les attaques par force brute.
-- [ ] **CI/CD** : Configurer GitHub Actions pour le linting et les tests automatiques.
+- [ ] **Tests** : Étendre la couverture de tests aux resolvers de ligues, paris et pilotes (auth déjà couvert).
+- [ ] **Validation** : Implémenter Zod ou Joi pour une validation stricte des entrées GraphQL.
 
 ---
 

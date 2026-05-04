@@ -1,46 +1,51 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { MyContext } from '../types/MyContext';
-import { UserModel } from '../models/User';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+import { User, UserModel } from '../models/User';
+import { jwtSecret } from '../config/connectionDB';
 
 export const auth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    // Récupérer le token du header Authorization
     const token = req.headers.authorization?.split(' ')[1];
+
     if (!token) {
-      throw new Error('Authentication token missing');
+      return next();
     }
 
-    // Vérifier et décoder le token
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-    
-    // Récupérer l'utilisateur
+    const decoded = jwt.verify(token, jwtSecret) as { userId: string };
     const user = await UserModel.findById(decoded.userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
 
-    // Ajouter l'utilisateur et le token au contexte
-    (req as any).context = {
-      req,
-      res,
-      user,
-      token
-    } as MyContext;
+    if (user) {
+      (req as any).context = { req, res, user, token } as MyContext;
+    }
 
     next();
-  } catch (error) {
-    res.status(401).json({ message: 'Authentication failed' });
+  } catch {
+    res.status(401).json({
+      errors: [{ message: 'Session expirée ou invalide. Veuillez vous reconnecter.' }],
+    });
   }
 };
 
-// Middleware pour vérifier le rôle admin
+export const requireAuth = (context: MyContext | undefined): User => {
+  if (!context?.user) {
+    throw new Error('Authentication required. Please log in.');
+  }
+  return context.user;
+};
+
+export const requireAdmin = (context: MyContext | undefined): User => {
+  const user = requireAuth(context);
+  if (user.role !== 'admin') {
+    throw new Error('Admin access required.');
+  }
+  return user;
+};
+
 export const isAdmin = (req: Request, res: Response, next: NextFunction): void => {
   const context = (req as any).context as MyContext;
-  
-  if (!context || !context.user || context.user.role !== 'admin') {
+
+  if (!context?.user || context.user.role !== 'admin') {
     res.status(403).json({ message: 'Access denied. Admin role required.' });
     return;
   }

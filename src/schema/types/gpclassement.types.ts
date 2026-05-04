@@ -8,6 +8,6 @@ export const GPType = new GraphQLObjectType({
     driver: { type: GraphQLString },
     team: { type: GraphQLString },
     number: { type: GraphQLString },
-    scraped_at: { type: GraphQLString }, 
+    scraped_at: { type: GraphQLString },
   },
 });

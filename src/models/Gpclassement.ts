@@ -10,10 +10,10 @@ export interface IGP extends Document {
 
 const GPSchema = new Schema<IGP>({
   position: { type: String, required: true }, // Position du pilote
-  driver: { type: String, required: true },   // Nom du pilote
-  team: { type: String, required: true },     // Nom de l'équipe
-  number: { type: String, required: true },   // Numéro du pilote
-  scraped_at: { type: Date, required: true }, // Date de récupération des 
+  driver: { type: String, required: true }, // Nom du pilote
+  team: { type: String, required: true }, // Nom de l'équipe
+  number: { type: String, required: true }, // Numéro du pilote
+  scraped_at: { type: Date, required: true }, // Date de récupération des
 });
 
 export default model<IGP>('GP', GPSchema);

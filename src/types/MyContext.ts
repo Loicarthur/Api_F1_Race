@@ -8,5 +8,3 @@ export interface MyContext {
   user?: User | null;
   token?: string;
 }
-
-
