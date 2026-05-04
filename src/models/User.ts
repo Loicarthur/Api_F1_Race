@@ -16,23 +16,23 @@ const UserSchema = new Schema({
   username: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
   },
   email: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
   },
   password: {
     type: String,
-    required: true
+    required: true,
   },
   leagues: [{ type: Schema.Types.ObjectId, ref: 'UserLeague' }],
   bets: [{ type: Schema.Types.ObjectId, ref: 'BetSelectionResult' }],
   role: {
     type: String,
     enum: ['user', 'admin'],
-    default: 'user'
+    default: 'user',
   },
   predictedPosition: {
     type: String,
@@ -46,8 +46,7 @@ const UserSchema = new Schema({
   },
 });
 
-// Hash le mot de passe avant de sauvegarder
-UserSchema.pre('save', async function(next) {
+UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
   try {
@@ -59,8 +58,7 @@ UserSchema.pre('save', async function(next) {
   }
 });
 
-// Méthode pour comparer les mots de passe
-UserSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+UserSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   try {
     return await bcrypt.compare(candidatePassword, this.password);
   } catch (error) {

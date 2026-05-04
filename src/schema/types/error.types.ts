@@ -1,4 +1,4 @@
-import { GraphQLObjectType, GraphQLInt, GraphQLString  } from 'graphql';
+import { GraphQLObjectType, GraphQLInt, GraphQLString } from 'graphql';
 
 export const ErrorType = new GraphQLObjectType({
   name: 'Error',
@@ -6,5 +6,5 @@ export const ErrorType = new GraphQLObjectType({
     message: { type: GraphQLString },
     code: { type: GraphQLString },
     httpStatus: { type: GraphQLInt },
-  }
+  },
 });

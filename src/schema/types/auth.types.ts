@@ -18,6 +18,5 @@ export const AuthResponseType = new GraphQLObjectType({
     user: { type: UserType },
     error: { type: ErrorType },
     httpStatus: { type: GraphQLInt },
-  })
+  }),
 });
-  

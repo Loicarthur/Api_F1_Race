@@ -1,15 +1,13 @@
 import { GraphQLObjectType, GraphQLID, GraphQLInt } from 'graphql';
 import { UserType } from './user.types';
-import { GPType } from './f1.types';
-
+import { GpType } from './gp.type';
 
 export const BetSelectionResultType = new GraphQLObjectType({
   name: 'BetSelectionResult',
   fields: {
     id: { type: GraphQLID },
     user: { type: UserType },
-    gp: { type: GPType },
+    gp: { type: GpType },
     pointsP10: { type: GraphQLInt },
-    
-  }
+  },
 });

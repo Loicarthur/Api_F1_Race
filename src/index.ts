@@ -1,66 +1,80 @@
 import express from 'express';
 import { graphqlHTTP } from 'express-graphql';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import schema from './schema/schema';
 import connectDB from './config/database';
 import { port } from './config/connectionDB';
+import { auth } from './middleware/auth';
 import cron from 'node-cron';
 import fetchAndUpdateDrivers from './services/driver.service';
 import fetchAndSaveLatestGP from './services/gp.service';
 import client from 'prom-client';
+import { logger } from './utils/logger';
 
-// Define a Prometheus counter for GraphQL requests
 const graphqlRequestCounter = new client.Counter({
   name: 'graphql_requests_total',
-  help: 'Total number of GraphQL POST requests to the root endpoint'
+  help: 'Total number of GraphQL POST requests to the root endpoint',
 });
 
-// Créer l'application Express
 const app = express();
 
-// Activer CORS
-app.use(cors());
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:3000'];
 
-// Prometheus metrics
+app.use(cors({ origin: allowedOrigins, credentials: true }));
+
+// Rate limiting HTTP global : 200 requêtes/15min par IP
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { errors: [{ message: 'Too many requests, please try again later.' }] },
+  })
+);
+
 client.collectDefaultMetrics();
 app.get('/metrics', async (_req, res) => {
   res.set('Content-Type', client.register.contentType);
   res.end(await client.register.metrics());
 });
 
+app.use(auth);
 
-// Connexion à MongoDB
 connectDB()
-  .then(async () => {
-    //Synchronisation immédiate des pilotes
-    console.log("Synchronisation initiale des pilotes...");
-    await fetchAndUpdateDrivers();
-    //synchonisation des GP
-    console.log('Synchronisation initiale des GPs...');
-    await fetchAndSaveLatestGP();
+  .then(() => {
+    logger.info('Synchronisation initiale des données en cours...');
+    fetchAndUpdateDrivers().catch((err) => logger.error('Erreur sync pilotes', { err }));
+    fetchAndSaveLatestGP().catch((err) => logger.error('Erreur sync GP', { err }));
 
-    //Planifier la synchronisation annuelle
-    cron.schedule("0 0 1 1 *", async () => {
-      console.log("Running yearly driver update...");
+    cron.schedule('0 0 1 1 *', async () => {
+      logger.info('Running yearly driver update...');
       await fetchAndUpdateDrivers();
     });
 
     app.use((req, _res, next) => {
-  if (req.path === '/' && req.method === 'POST') {
-    graphqlRequestCounter.inc();
-  }
-  next();
-});
-    // Configuration de l'endpoint GraphQL
-    app.use('/', graphqlHTTP({ schema, graphiql: true }));
+      if (req.path === '/' && req.method === 'POST') graphqlRequestCounter.inc();
+      next();
+    });
 
-    // Démarrer le serveur
+    app.use(
+      '/',
+      graphqlHTTP((req: any) => ({
+        schema,
+        graphiql: process.env.NODE_ENV !== 'production',
+        context: req.context,
+      }))
+    );
+
     app.listen(port, () => {
-      console.log(`Serveur GraphQL démarré sur http://localhost:${port}`);
-      console.log(`Prometheus metrics exposées sur http://localhost:${port}/metrics`);
+      logger.info(`Serveur GraphQL démarré sur http://localhost:${port}`);
+      logger.info(`Prometheus metrics exposées sur http://localhost:${port}/metrics`);
     });
   })
-  .catch(err => {
-    console.error('Erreur de connexion à MongoDB:', err);
+  .catch((err) => {
+    logger.error('Erreur critique de connexion', { err });
     process.exit(1);
   });

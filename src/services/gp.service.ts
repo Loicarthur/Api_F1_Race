@@ -1,16 +1,18 @@
 import axios from 'axios';
-import GP from '../models/GpClassement';
+import GP from '../models/Gpclassement';
+import { externalApiToken } from '../config/connectionDB';
+import { logger } from '../utils/logger';
 
 const fetchAndSaveLatestGP = async () => {
   try {
     const headers = {
-      Authorization: `Bearer 2025`,
+      Authorization: `Bearer ${externalApiToken}`,
     };
 
     const response = await axios.get('https://f1-api.demo.mds-paris.yt/api/gp/latest', { headers });
 
     if (!response.data || !Array.isArray(response.data)) {
-      console.error('Invalid data format received from API');
+      logger.error('Invalid data format received from GP API');
       return;
     }
 
@@ -38,9 +40,9 @@ const fetchAndSaveLatestGP = async () => {
       // Ne rien afficher ici non plus
     }
 
-    console.log('All GP data processed successfully!');
+    logger.info('All GP data processed successfully');
   } catch (error) {
-    console.error('Error fetching or saving GP data:', error);
+    logger.error('Error fetching or saving GP data', { error });
   }
 };
 
