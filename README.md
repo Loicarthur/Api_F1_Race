@@ -27,13 +27,15 @@ Une API GraphQL performante pour suivre les pilotes, les écuries et les Grands 
 ## 📂 Structure du Projet
 ```text
 src/
+├── __tests__/      # Tests unitaires et d'intégration (Jest)
 ├── config/         # Configuration DB et variables d'environnement
-├── middleware/     # Middlewares Express (Auth, etc.)
+├── middleware/     # Middlewares Express (Auth, rate limiter)
 ├── models/         # Modèles Mongoose (User, Driver, Bet, etc.)
 ├── resolvers/      # Logique de traitement des requêtes GraphQL
 ├── schema/         # Définition du schéma GraphQL et des types
 ├── services/       # Services tiers (Sync API OpenF1)
-└── types/          # Définitions de types TypeScript personnalisés
+├── types/          # Définitions de types TypeScript personnalisés
+└── utils/          # Utilitaires partagés (logger, rate limiter)
 ```
 
 ---
@@ -80,11 +82,20 @@ JWT_SECRET=votre_secret_tres_long_et_securise
 ## 📡 Endpoints
 - **GraphQL API** : `http://localhost:4002/` (Interface GraphiQL disponible dans le navigateur)
 - **Metrics (Prometheus)** : `http://localhost:4002/metrics`
+- **Grafana** : `http://localhost:3000` (dashboard de monitoring, disponible via Docker Compose)
+
+---
+
+## 🧪 Tests
+```bash
+npm test
+```
+Couverture actuelle : authentification, middleware et rate limiter (17 tests, 100 % pass).
 
 ---
 
 ## 📈 À Améliorer
-- [ ] **Tests** : Étendre la couverture de tests aux resolvers de ligues, paris et pilotes (auth déjà couvert).
+- [ ] **Tests** : Étendre la couverture aux resolvers de ligues, paris et pilotes.
 - [ ] **Validation** : Implémenter Zod ou Joi pour une validation stricte des entrées GraphQL.
 
 ---
