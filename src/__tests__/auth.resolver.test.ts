@@ -5,21 +5,25 @@ import { MyContext } from '../types/MyContext';
 import { Request, Response } from 'express';
 
 let mongod: MongoMemoryServer;
+let ipCounter = 0;
 
 const makeCtx = (): MyContext => ({
-  req: { ip: '127.0.0.1', socket: { remoteAddress: '127.0.0.1' } } as unknown as Request,
+  req: {
+    ip: `127.0.0.${++ipCounter}`,
+    socket: { remoteAddress: `127.0.0.${ipCounter}` },
+  } as unknown as Request,
   res: {} as Response,
 });
 
 beforeAll(async () => {
   mongod = await MongoMemoryServer.create();
   await mongoose.connect(mongod.getUri());
-});
+}, 120000);
 
 afterAll(async () => {
   await mongoose.disconnect();
   await mongod.stop();
-});
+}, 30000);
 
 afterEach(async () => {
   await mongoose.connection.dropDatabase();
