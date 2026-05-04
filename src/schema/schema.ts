@@ -27,6 +27,8 @@ import { driverResolvers } from '../resolvers/driver.resolver';
 import { EcurieType } from './types/ecurie.type';
 import { gpResolvers } from '../resolvers/gp.resolver';
 import { GpType } from './types/gp.type';
+import { gpClassementResolvers } from '../resolvers/gpClassement.resolver';
+import { GPType } from './types/gpclassement.types';
 import {
   RegisterInputType,
   LoginInputType,
@@ -111,6 +113,10 @@ const RootQuery = new GraphQLObjectType({
     drivers: {
       type: new GraphQLList(DriverType),
       resolve: driverResolvers.Query.drivers,
+    },
+    gpClassement: {
+      type: new GraphQLList(GPType),
+      resolve: gpClassementResolvers.Query.gpClassement,
     },
   }),
 });
